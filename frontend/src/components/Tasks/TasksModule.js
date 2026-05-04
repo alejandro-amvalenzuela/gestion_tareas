@@ -25,7 +25,7 @@ export default function TasksModule() {
   const [taskToDelete, setTaskToDelete] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   
-  // Form State
+  // Estado del formulario
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -146,7 +146,7 @@ export default function TasksModule() {
 
   return (
     <div className={styles.moduleContainer}>
-      {/* HEADER */}
+      {/* CABECERA */}
       <header className={styles.header}>
         <div className={styles.titleSection}>
           <h1>Mis Tareas</h1>
@@ -170,7 +170,7 @@ export default function TasksModule() {
         </div>
       </header>
 
-      {/* SUMMARY CARDS */}
+      {/* TARJETAS DE RESUMEN */}
       <section className={styles.summaryGrid}>
         <div className={styles.summaryCard}>
           <div className={`${styles.iconCircle}`} style={{background: 'var(--color-blue-soft)', color: 'var(--color-blue)'}}>
@@ -210,7 +210,7 @@ export default function TasksModule() {
         </div>
       </section>
 
-      {/* TASK TABLE */}
+      {/* TABLA DE TAREAS */}
       <section className={styles.tableContainer}>
         {loading ? (
           <div style={{padding: '4rem', textAlign: 'center', color: 'var(--text-secondary)'}}>
@@ -313,7 +313,7 @@ export default function TasksModule() {
         )}
       </section>
 
-      {/* CREATE TASK MODAL */}
+      {/* MODAL DE CREACIÓN DE TAREA */}
       {isModalOpen && (
         <div className={styles.modalOverlay} onClick={() => setIsModalOpen(false)}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
@@ -412,7 +412,7 @@ export default function TasksModule() {
         </div>
       )}
 
-      {/* DELETE CONFIRMATION MODAL */}
+      {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN */}
       {isDeleteModalOpen && (
         <div className={styles.modalOverlay} onClick={() => setIsDeleteModalOpen(false)}>
           <div className={`${styles.modalContent} ${styles.modalConfirm}`} onClick={(e) => e.stopPropagation()}>

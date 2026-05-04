@@ -7,7 +7,7 @@
   gap: 1.5rem;
 }
 
-/* Header Styles */
+/* Estilos de la cabecera */
 .header {
   display: flex;
   justify-content: space-between;
@@ -91,7 +91,7 @@
   box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
 }
 
-/* Summary Cards */
+/* Tarjetas de resumen */
 .summaryGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -136,7 +136,7 @@
   color: var(--text-secondary);
 }
 
-/* Table Styles */
+/* Estilos de la tabla */
 .tableContainer {
   background: var(--bg-card);
   border-radius: var(--border-radius);
@@ -173,7 +173,7 @@
   background-color: #f8fafc;
 }
 
-/* Badges */
+/* Etiquetas (Badges) */
 .badge {
   padding: 0.25rem 0.625rem;
   border-radius: 9999px;
@@ -189,7 +189,7 @@
 .badgePurple { background: var(--color-purple-soft); color: var(--color-purple); }
 .badgeSlate { background: var(--color-slate-soft); color: var(--color-slate); }
 
-/* Task Cell */
+/* Celda de tarea */
 .taskCell {
   display: flex;
   flex-direction: column;
@@ -205,14 +205,14 @@
   color: var(--text-secondary);
 }
 
-/* Avatar */
+/* Avatar de usuario */
 .avatarWrapper {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-/* Custom Checkbox */
+/* Checkbox personalizado */
 .customCheckbox {
   width: 20px;
   height: 20px;
@@ -242,7 +242,7 @@
   border-color: #059669;
 }
 
-/* Pagination */
+/* Paginación */
 .pagination {
   padding: 1rem 1.5rem;
   display: flex;
@@ -267,7 +267,7 @@
   border-color: var(--color-blue);
 }
 
-/* Modal / Drawer */
+/* Modal / Panel lateral */
 .modalOverlay {
   position: fixed;
   top: 0;
@@ -337,7 +337,7 @@
   gap: 1.25rem;
 }
 
-/* Full width fields */
+/* Campos de ancho completo */
 .fieldFull {
   grid-column: span 2;
 }
@@ -394,7 +394,7 @@
   align-items: center;
 }
 
-/* Action Buttons in Table */
+/* Botones de acción en la tabla */
 .actionBtn {
   width: 32px;
   height: 32px;
