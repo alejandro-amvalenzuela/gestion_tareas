@@ -1,0 +1,66 @@
+const User = require("../models/userModel");
+
+const authController = {
+    login: async (req, res) => {
+        try {
+            const { username, password } = req.body;
+
+            const user = await User.findOne({ username });
+
+            if (!user) {
+                return res.status(401).json({ mensaje: "Usuario no encontrado" });
+            }
+
+            if (!user.activo) {
+                return res.status(403).json({ mensaje: "El usuario no tiene permiso para acceder al sistema" });
+            }
+
+            // Comparación simple sin hash como solicitó el usuario
+            if (user.password !== password) {
+                return res.status(401).json({ mensaje: "Contraseña incorrecta" });
+            }
+
+            // Devolvemos la info del usuario (sin password por seguridad mínima)
+            const userResponse = {
+                _id: user._id,
+                nombre: user.nombre,
+                apellido: user.apellido,
+                username: user.username,
+                rol: user.rol
+            };
+
+            res.json({
+                mensaje: "Login exitoso",
+                user: userResponse
+            });
+
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ mensaje: "Error en el servidor" });
+        }
+    },
+
+    initAdmin: async () => {
+        try {
+            const adminExists = await User.findOne({ username: "admin" });
+
+            if (!adminExists) {
+                const adminUser = new User({
+                    nombre: "Admin",
+                    apellido: "Sistema",
+                    username: "admin",
+                    password: "12345",
+                    rol: "administrador",
+                    activo: true
+                });
+
+                await adminUser.save();
+                console.log("Usuario administrador creado por defecto: admin/12345");
+            }
+        } catch (error) {
+            console.error("Error al inicializar admin:", error);
+        }
+    }
+};
+
+module.exports = authController;

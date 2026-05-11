@@ -10,11 +10,13 @@ const TareaSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
-    project: {
-        name: { type: String, default: "General" }
+    categoria: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Categoria"
     },
     assignedTo: {
-        name: { type: String, default: "Sin asignar" }
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
     },
     priority: {
         type: String,
@@ -32,6 +34,11 @@ const TareaSchema = new mongoose.Schema({
     },
     completedAt: {
         type: Date
+    },
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true
     }
 }, {
     timestamps: true // Esto crea automáticamente createdAt y updatedAt

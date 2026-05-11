@@ -13,13 +13,24 @@ import {
   Layout,
   X,
   Loader2,
-  Pen
+  Pen,
+  LogOut
 } from "lucide-react";
 import styles from "./TasksModule.module.css";
 import { tareasService } from "@/services/tareasService";
+import { authService } from "@/services/authService";
+import { usersService } from "@/services/usersService";
+import { categoriaService } from "@/services/categoriaService";
+import { useRouter } from "next/navigation";
+import CustomSelect from "@/components/Shared/CustomSelect";
+import CustomDatePicker from "@/components/Shared/CustomDatePicker";
 
 export default function TasksModule() {
+  const router = useRouter();
+  const user = authService.getCurrentUser();
   const [tasks, setTasks] = useState([]);
+  const [categorias, setCategorias] = useState([]);
+  const [availableUsers, setAvailableUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -33,8 +44,8 @@ export default function TasksModule() {
   const initialFormData = {
     title: "",
     description: "",
-    project: { name: "General" },
-    assignedTo: { name: "" },
+    categoria: "",
+    assignedTo: "",
     priority: "medium",
     status: "pending",
     dueDate: "",
@@ -51,7 +62,22 @@ export default function TasksModule() {
 
   useEffect(() => {
     fetchTasks();
+    fetchAuxData();
   }, []);
+
+  const fetchAuxData = async () => {
+    try {
+      const [cats, users] = await Promise.all([
+        categoriaService.getCategorias(),
+        usersService.getUsers()
+      ]);
+      setCategorias(cats);
+      // Filtrar solo usuarios de tipo "usuario"
+      setAvailableUsers(users.filter(u => u.rol === "usuario"));
+    } catch (err) {
+      console.error("Error al cargar datos auxiliares", err);
+    }
+  };
 
   const fetchTasks = async () => {
     try {
@@ -70,7 +96,7 @@ export default function TasksModule() {
   const filteredTasks = tasks.filter(task =>
     task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     task.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    task.project?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    task.categoria?.nombre?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleSubmit = async (e) => {
@@ -123,12 +149,8 @@ export default function TasksModule() {
     setFormData({
       title: task.title || "",
       description: task.description || "",
-      project: {
-        name: task.project?.name || "General"
-      },
-      assignedTo: {
-        name: task.assignedTo?.name || ""
-      },
+      categoria: task.categoria?._id || "",
+      assignedTo: task.assignedTo?._id || "",
       priority: task.priority || "medium",
       status: task.status || "pending",
       dueDate: formattedDate,
@@ -210,20 +232,25 @@ export default function TasksModule() {
     }
   };
 
+  const handleLogout = () => {
+    authService.logout();
+    router.push("/login");
+  };
+
   const getPriorityBadge = (priority) => {
     switch (priority) {
-      case "high": return <span className={`${styles.badge} ${styles.badgeOrange}`}>Alta</span>;
-      case "medium": return <span className={`${styles.badge} ${styles.badgeBlue}`}>Media</span>;
-      case "low": return <span className={`${styles.badge} ${styles.badgeSlate}`}>Baja</span>;
+      case "high": return <span style={{ color: 'var(--color-orange)', fontWeight: 600 }}>Alta</span>;
+      case "medium": return <span style={{ color: 'var(--color-blue)', fontWeight: 600 }}>Media</span>;
+      case "low": return <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Baja</span>;
       default: return null;
     }
   };
 
   const getStatusBadge = (status) => {
     switch (status) {
-      case "pending": return <span className={`${styles.badge} ${styles.badgeSlate}`}>Pendiente</span>;
-      case "in_progress": return <span className={`${styles.badge} ${styles.badgeBlue}`}>En progreso</span>;
-      case "completed": return <span className={`${styles.badge} ${styles.badgeGreen}`}>Completada</span>;
+      case "pending": return <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>Pendiente</span>;
+      case "in_progress": return <span style={{ color: 'var(--color-blue)', fontWeight: 500 }}>En progreso</span>;
+      case "completed": return <span style={{ color: 'var(--color-green)', fontWeight: 500 }}>Completada</span>;
       default: return null;
     }
   };
@@ -262,32 +289,8 @@ export default function TasksModule() {
 
   return (
     <div className={styles.moduleContainer}>
-      {/* CABECERA */}
-      <header className={styles.header}>
-        <div className={styles.titleSection}>
-          <h1>Mis Tareas</h1>
-          <p>Organiza tus actividades diarias y proyectos personales</p>
-        </div>
-        <div className={styles.actionsSection}>
-          <div className={styles.searchWrapper}>
-            <Search size={18} className={styles.searchIcon} />
-            <input
-              type="text"
-              placeholder="Buscar tareas..."
-              className={styles.searchInput}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <button className={styles.btnPrimary} onClick={handleCreateClick}>
-            <Plus size={18} />
-            Nueva tarea
-          </button>
-        </div>
-      </header>
-
       {/* TARJETAS DE RESUMEN */}
-      <section className={styles.summaryGrid}>
+      <section className={styles.summaryGrid} style={{ marginBottom: '2rem' }}>
         <div className={styles.summaryCard}>
           <div className={`${styles.iconCircle}`} style={{ background: 'var(--color-blue-soft)', color: 'var(--color-blue)' }}>
             <Layout size={24} />
@@ -326,6 +329,34 @@ export default function TasksModule() {
         </div>
       </section>
 
+      {/* BUSCADOR Y ACCIONES INTEGRADOS */}
+      <section className={styles.tableHeader}>
+        <div className={styles.tableTitle}>
+          <h3>Listado de Tareas</h3>
+          <p>{filteredTasks.length} tareas encontradas</p>
+        </div>
+
+        <div className={styles.tableActions}>
+          <div className={styles.searchWrapper}>
+            <Search className={styles.searchIcon} size={18} />
+            <input
+              type="text"
+              placeholder="Buscar..."
+              className={styles.searchInput}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          {user?.rol === "administrador" && (
+            <button className={styles.btnPrimary} onClick={handleCreateClick}>
+              <Plus size={18} />
+              <span>Nueva Tarea</span>
+            </button>
+          )}
+        </div>
+      </section>
+
       {/* TABLA DE TAREAS */}
       <section className={styles.tableContainer}>
         {loading ? (
@@ -342,14 +373,9 @@ export default function TasksModule() {
           <table className={styles.taskTable}>
             <thead>
               <tr>
-                <th style={{ width: '40px' }}>
-                  <div className={styles.customCheckbox} style={{ cursor: 'default', opacity: 0.5 }}>
-                    <CheckCircle2 size={14} />
-                  </div>
-                </th>
                 <th>Tarea</th>
                 <th>Categoría / Proyecto</th>
-                <th>Asignado</th>
+                {user?.rol === "administrador" ? <th>Asignado</th> : <th>Asignado por</th>}
                 <th>Prioridad</th>
                 <th>Estado</th>
                 <th>Fecha límite</th>
@@ -359,7 +385,7 @@ export default function TasksModule() {
             <tbody>
               {filteredTasks.length === 0 ? (
                 <tr>
-                  <td colSpan="8" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
                     {searchTerm ? "No se encontraron tareas que coincidan con la búsqueda." : "No hay tareas registradas. Empieza creando una nueva."}
                   </td>
                 </tr>
@@ -367,26 +393,23 @@ export default function TasksModule() {
                 filteredTasks.map((task) => (
                   <tr key={task._id} className={styles.rowHover}>
                     <td>
-                      <div
-                        className={`${styles.customCheckbox} ${task.status === "completed" ? styles.checkboxChecked : ""}`}
-                        onClick={() => toggleStatus(task)}
-                        title={task.status === "completed" ? "Marcar como pendiente" : "Marcar como completada"}
-                      >
-                        {task.status === "completed" && <CheckCircle2 size={14} />}
-                      </div>
-                    </td>
-                    <td>
                       <div className={styles.taskCell}>
                         <span className={styles.taskTitle} style={{ textDecoration: task.status === "completed" ? "line-through" : "none", color: task.status === "completed" ? "var(--text-muted)" : "inherit" }}>{task.title}</span>
                         <span className={styles.taskDesc}>{task.description}</span>
                       </div>
                     </td>
                     <td>
-                      <span className={`${styles.badge} ${styles.badgeSlate}`}>{task.project?.name || "General"}</span>
+                      <span style={{ color: task.categoria?.color || 'inherit', fontWeight: 600, fontSize: '0.85rem' }}>
+                        {task.categoria?.nombre || "Sin categoría"}
+                      </span>
                     </td>
                     <td>
                       <div className={styles.avatarWrapper}>
-                        <span>{task.assignedTo?.name || "Sin asignar"}</span>
+                        {user?.rol === "administrador" ? (
+                          <span>{task.assignedTo ? `${task.assignedTo.nombre} ${task.assignedTo.apellido}` : "Sin asignar"}</span>
+                        ) : (
+                          <span>{task.user ? `${task.user.nombre} ${task.user.apellido}` : "Sistema"}</span>
+                        )}
                       </div>
                     </td>
                     <td>{getPriorityBadge(task.priority)}</td>
@@ -418,8 +441,12 @@ export default function TasksModule() {
                             Reabrir
                           </button>
                         )}
-                        <button className={`${styles.actionBtn} ${styles.edit2Btn}`} onClick={() => handleEditClick(task)} title="Editar"><Pencil size={16} /></button>
-                        <button className={`${styles.actionBtn} ${styles.deleteBtn}`} onClick={() => handleDeleteClick(task)} title="Eliminar"><Trash2 size={16} /></button>
+                        {user?.rol === "administrador" && (
+                          <>
+                            <button className={`${styles.actionBtn} ${styles.edit2Btn}`} onClick={() => handleEditClick(task)} title="Editar"><Pencil size={16} /></button>
+                            <button className={`${styles.actionBtn} ${styles.deleteBtn}`} onClick={() => handleDeleteClick(task)} title="Eliminar"><Trash2 size={16} /></button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -450,7 +477,7 @@ export default function TasksModule() {
                   placeholder="Ej: Revisar informes mensuales..."
                   className={styles.formInput}
                   value={formData.title}
-                  onChange={(e) => handleInputValidation("title", e.target.value)}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 />
               </div>
 
@@ -460,53 +487,49 @@ export default function TasksModule() {
                   placeholder="Añade detalles relevantes..."
                   className={styles.formTextarea}
                   value={formData.description}
-                  onChange={(e) => handleInputValidation("description", e.target.value)}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 ></textarea>
               </div>
 
               <div className={styles.formGroup}>
-                <label>Categoría / Proyecto</label>
-                <input
-                  type="text"
-                  placeholder="General"
-                  className={styles.formInput}
-                  value={formData.project.name}
-                  onChange={(e) => handleInputValidation("project", e.target.value)}
+                <CustomSelect 
+                  label="Categoría"
+                  placeholder="Seleccionar categoría"
+                  options={categorias.map(c => ({ value: c._id, label: c.nombre, color: c.color }))}
+                  value={formData.categoria}
+                  onChange={(val) => setFormData({ ...formData, categoria: val })}
                 />
               </div>
 
               <div className={styles.formGroup}>
-                <label>Asignado a</label>
-                <input
-                  type="text"
-                  placeholder="Nombre del responsable"
-                  className={styles.formInput}
-                  value={formData.assignedTo.name}
-                  onChange={(e) => handleInputValidation("assignedTo", e.target.value)}
+                <CustomSelect 
+                  label="Asignado a"
+                  placeholder="Seleccionar responsable"
+                  options={availableUsers.map(u => ({ value: u._id, label: `${u.nombre} ${u.apellido}` }))}
+                  value={formData.assignedTo}
+                  onChange={(val) => setFormData({ ...formData, assignedTo: val })}
                 />
               </div>
 
               <div className={styles.formGroup}>
-                <label>Prioridad</label>
-                <select
-                  className={styles.formSelect}
+                <CustomSelect 
+                  label="Prioridad"
+                  options={[
+                    { value: "low", label: "Baja" },
+                    { value: "medium", label: "Media" },
+                    { value: "high", label: "Alta" }
+                  ]}
                   value={formData.priority}
-                  onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                >
-                  <option value="low">Baja</option>
-                  <option value="medium">Media</option>
-                  <option value="high">Alta</option>
-                </select>
+                  onChange={(val) => setFormData({ ...formData, priority: val })}
+                />
               </div>
 
               <div className={styles.formGroup}>
-                <label>Fecha Límite</label>
-                <input
-                  type="date"
-                  className={styles.formInput}
+                <CustomDatePicker 
+                  label="Fecha Límite"
+                  placeholder="Seleccionar fecha"
                   value={formData.dueDate}
-                  min={new Date().toISOString().split("T")[0]}
-                  onChange={(e) => handleDateValidation(e.target.value)}
+                  onChange={(val) => setFormData({ ...formData, dueDate: val })}
                 />
               </div>
 
@@ -517,7 +540,7 @@ export default function TasksModule() {
                   placeholder="personal, urgente, casa (separadas por comas)"
                   className={styles.formInput}
                   value={formData.tags}
-                  onChange={(e) => handleInputValidation("tags", e.target.value)}
+                  onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
                 />
               </div>
 
@@ -575,7 +598,7 @@ export default function TasksModule() {
                   placeholder="Ej: Revisar informes mensuales..."
                   className={styles.formInput}
                   value={formData.title}
-                  onChange={(e) => handleInputValidation("title", e.target.value)}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 />
               </div>
 
@@ -585,58 +608,49 @@ export default function TasksModule() {
                   placeholder="Añade detalles relevantes..."
                   className={styles.formTextarea}
                   value={formData.description}
-                  onChange={(e) => handleInputValidation("description", e.target.value)}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 ></textarea>
               </div>
 
               <div className={styles.formGroup}>
-                <label>Categoría / Proyecto</label>
-                <input
-                  type="text"
-                  placeholder="General"
-                  className={styles.formInput}
-                  value={formData.project.name}
-                  onChange={(e) => handleInputValidation("project", e.target.value)}
+                <CustomSelect 
+                  label="Categoría"
+                  placeholder="Seleccionar categoría"
+                  options={categorias.map(c => ({ value: c._id, label: c.nombre, color: c.color }))}
+                  value={formData.categoria}
+                  onChange={(val) => setFormData({ ...formData, categoria: val })}
                 />
               </div>
 
               <div className={styles.formGroup}>
-                <label>Asignado a</label>
-                <input
-                  type="text"
-                  placeholder="Nombre del responsable"
-                  className={styles.formInput}
-                  value={formData.assignedTo.name}
-                  onChange={(e) => handleInputValidation("assignedTo", e.target.value)}
+                <CustomSelect 
+                  label="Asignado a"
+                  placeholder="Seleccionar responsable"
+                  options={availableUsers.map(u => ({ value: u._id, label: `${u.nombre} ${u.apellido}` }))}
+                  value={formData.assignedTo}
+                  onChange={(val) => setFormData({ ...formData, assignedTo: val })}
                 />
               </div>
 
               <div className={styles.formGroup}>
-                <label>Prioridad</label>
-                <select
-                  className={styles.formSelect}
+                <CustomSelect 
+                  label="Prioridad"
+                  options={[
+                    { value: "low", label: "Baja" },
+                    { value: "medium", label: "Media" },
+                    { value: "high", label: "Alta" }
+                  ]}
                   value={formData.priority}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      priority: e.target.value
-                    })
-                  }
-                >
-                  <option value="low">Baja</option>
-                  <option value="medium">Media</option>
-                  <option value="high">Alta</option>
-                </select>
+                  onChange={(val) => setFormData({ ...formData, priority: val })}
+                />
               </div>
 
               <div className={styles.formGroup}>
-                <label>Fecha Límite</label>
-                <input
-                  type="date"
-                  className={styles.formInput}
+                <CustomDatePicker 
+                  label="Fecha Límite"
+                  placeholder="Seleccionar fecha"
                   value={formData.dueDate}
-                  min={new Date().toISOString().split("T")[0]}
-                  onChange={(e) => handleDateValidation(e.target.value)}
+                  onChange={(val) => setFormData({ ...formData, dueDate: val })}
                 />
               </div>
 
@@ -647,7 +661,7 @@ export default function TasksModule() {
                   placeholder="personal, urgente, casa (separadas por comas)"
                   className={styles.formInput}
                   value={formData.tags}
-                  onChange={(e) => handleInputValidation("tags", e.target.value)}
+                  onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
                 />
               </div>
 

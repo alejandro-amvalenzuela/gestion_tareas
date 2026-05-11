@@ -11,14 +11,22 @@
   /* Brand/Status Colors */
   --color-blue: #2563eb;
   --color-blue-soft: #eff6ff;
-  --color-green: #10b981;
-  --color-green-soft: #ecfdf5;
+  --color-green: rgba(36, 184, 32, 1);
+  --color-green-dark: #1a8c17;
+  --color-green-soft: rgba(36, 184, 32, 0.1);
   --color-orange: #f59e0b;
   --color-orange-soft: #fffbeb;
   --color-purple: #8b5cf6;
   --color-purple-soft: #f5f3ff;
   --color-slate: #64748b;
   --color-slate-soft: #f1f5f9;
+
+  /* Badge Text Colors (High Contrast) */
+  --badge-blue-text: #1e3a8a;
+  --badge-green-text: #064e3b;
+  --badge-orange-text: #7c2d12;
+  --badge-purple-text: #4c1d95;
+  --badge-slate-text: #1e293b;
   
   /* Borders & Shadows */
   --border-radius: 12px;

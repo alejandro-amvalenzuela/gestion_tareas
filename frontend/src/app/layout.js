@@ -1,5 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import DashboardWrapper from "@/components/Navigation/DashboardWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,7 +21,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="es">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        {children}
+        <DashboardWrapper>
+          {children}
+        </DashboardWrapper>
       </body>
     </html>
   );

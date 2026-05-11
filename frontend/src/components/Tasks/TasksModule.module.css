@@ -1,10 +1,7 @@
 .moduleContainer {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 1.5rem;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
 }
 
 /* Estilos de la cabecera */
@@ -55,48 +52,83 @@
 }
 
 .searchInput:focus {
-  border-color: var(--color-blue);
-  box-shadow: 0 0 0 3px var(--color-blue-soft);
+  border-color: var(--color-green);
+  box-shadow: 0 0 0 3px var(--color-green-soft);
 }
 
 .btnSecondary {
   padding: 0.625rem 1rem;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
+  background: var(--bg-main);
+  border: 1.5px solid var(--border-color);
+  border-radius: 10px;
   color: var(--text-primary);
-  font-weight: 500;
+  font-weight: 600;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  transition: all 0.2s ease;
 }
 
 .btnSecondary:hover {
-  background: var(--bg-main);
+  background: #e2e8f0;
+  border-color: #cbd5e1;
 }
 
 .btnPrimary {
-  padding: 0.625rem 1rem;
-  background: var(--color-blue);
-  border-radius: 8px;
+  padding: 0.625rem 1.25rem;
+  background: var(--color-green);
+  border-radius: 10px;
   color: white;
-  font-weight: 500;
+  font-weight: 600;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
 }
 
 .btnPrimary:hover {
-  background: #1d4ed8;
-  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+  background: var(--color-green-dark);
+  box-shadow: 0 10px 15px -3px rgba(36, 184, 32, 0.3);
+  transform: translateY(-1px);
 }
 
-/* Tarjetas de resumen */
+.tableHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  padding: 1.5rem 2rem;
+  border-radius: 16px 16px 0 0;
+  border: 1px solid #eef2f6;
+  border-bottom: none;
+}
+
+.tableTitle h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.tableTitle p {
+  font-size: 0.8125rem;
+  color: #64748b;
+  margin: 2px 0 0 0;
+}
+
+.tableActions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .summaryGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1.25rem;
+  margin-bottom: 2rem;
 }
+
 
 .summaryCard {
   background: var(--bg-card);
@@ -138,10 +170,9 @@
 
 /* Estilos de la tabla */
 .tableContainer {
-  background: var(--bg-card);
-  border-radius: var(--border-radius);
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-sm);
+  background: white;
+  border-radius: 0 0 16px 16px;
+  border: 1px solid #eef2f6;
   overflow: hidden;
 }
 
@@ -183,11 +214,11 @@
   align-items: center;
 }
 
-.badgeBlue { background: var(--color-blue-soft); color: var(--color-blue); }
-.badgeGreen { background: var(--color-green-soft); color: var(--color-green); }
-.badgeOrange { background: var(--color-orange-soft); color: var(--color-orange); }
-.badgePurple { background: var(--color-purple-soft); color: var(--color-purple); }
-.badgeSlate { background: var(--color-slate-soft); color: var(--color-slate); }
+.badgeBlue { background: #dbeafe; color: var(--badge-blue-text); border: 1px solid #bfdbfe; }
+.badgeGreen { background: #d1fae5; color: var(--badge-green-text); border: 1px solid #a7f3d0; }
+.badgeOrange { background: #ffedd5; color: var(--badge-orange-text); border: 1px solid #fed7aa; }
+.badgePurple { background: #ede9fe; color: var(--badge-purple-text); border: 1px solid #ddd6fe; }
+.badgeSlate { background: #f1f5f9; color: var(--badge-slate-text); border: 1px solid #e2e8f0; }
 
 /* Celda de tarea */
 .taskCell {
@@ -261,6 +292,19 @@
   border: 1px solid var(--border-color);
 }
 
+.fieldFull {
+  grid-column: 1 / -1;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
 .pageBtnActive {
   background: var(--color-blue);
   color: white;
@@ -285,10 +329,10 @@
 
 .modalContent {
   width: 100%;
-  max-width: 600px;
+  max-width: 520px;
   background: white;
   border-radius: 16px;
-  padding: 2rem;
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
   box-shadow: var(--shadow-lg);
@@ -335,7 +379,7 @@
 .modalForm {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 /* Campos de ancho completo */
@@ -375,7 +419,7 @@
 
 .formTextarea {
   resize: none;
-  min-height: 70px;
+  min-height: 60px;
 }
 
 .modalFooter {
@@ -408,61 +452,67 @@
 }
 
 .statusTextBtn {
-  padding: 0.375rem 0.75rem;
+  padding: 0.5rem 0.875rem;
   font-size: 0.75rem;
-  font-weight: 600;
-  border-radius: 6px;
+  font-weight: 700;
+  border-radius: 8px;
   text-transform: uppercase;
-  letter-spacing: 0.025em;
-  transition: var(--transition);
+  letter-spacing: 0.05em;
+  transition: all 0.2s ease;
+  border: none;
 }
 
 .editBtn {
-  color: var(--color-blue);
-  background: var(--color-blue-soft);
+  background: rgba(36, 184, 32, 1);
+  color: white;
+  box-shadow: 0 2px 4px rgba(36, 184, 32, 0.2);
 }
 
 .editBtn:hover {
-  background: var(--color-blue);
-  color: white;
+  background: #1a8c17;
+  box-shadow: 0 4px 8px rgba(36, 184, 32, 0.3);
 }
 
 .completeBtn {
-  color: var(--color-green);
-  background: var(--color-green-soft);
+  background: rgba(36, 184, 32, 1);
+  color: white;
+  box-shadow: 0 2px 4px rgba(36, 184, 32, 0.2);
 }
 
 .completeBtn:hover {
-  background: var(--color-green);
-  color: white;
+  background: #1a8c17;
+  box-shadow: 0 4px 8px rgba(36, 184, 32, 0.3);
 }
 
 .edit2Btn {
-  color: #f59e0b;
-  background: #fef3c7;
+  background: #f59e0b;
+  color: white;
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
 }
 
 .edit2Btn:hover {
-  background: #f59e0b;
-  color: white;
+  background: #d97706;
+  transform: translateY(-1px);
 }
 
 .deleteBtn {
-  color: #ef4444;
-  background: #fee2e2;
+  background: #ef4444;
+  color: white;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
 }
 
 .deleteBtn:hover {
-  background: #ef4444;
-  color: white;
+  background: #dc2626;
+  transform: translateY(-1px);
 }
 
 .moreBtn {
-  color: var(--text-muted);
-  background: var(--bg-main);
+  background: var(--text-muted);
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .moreBtn:hover {
-  background: var(--border-color);
-  color: var(--text-primary);
+  background: var(--text-secondary);
+  transform: translateY(-1px);
 }
