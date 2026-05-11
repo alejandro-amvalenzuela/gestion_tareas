@@ -319,6 +319,7 @@
   background: #dc2626 !important;
 }
 
+
 @keyframes modalScale {
   from { transform: scale(0.95); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
@@ -433,6 +434,16 @@
 
 .completeBtn:hover {
   background: var(--color-green);
+  color: white;
+}
+
+.edit2Btn {
+  color: #f59e0b;
+  background: #fef3c7;
+}
+
+.edit2Btn:hover {
+  background: #f59e0b;
   color: white;
 }
 
