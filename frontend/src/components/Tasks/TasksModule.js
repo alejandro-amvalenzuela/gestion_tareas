@@ -275,7 +275,7 @@ export default function TasksModule() {
                     </td>
                     <td>{getPriorityBadge(task.priority)}</td>
                     <td>{getStatusBadge(task.status)}</td>
-                    <td style={{color: 'var(--text-secondary)'}}>{task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "S/F"}</td>
+                    <td style={{color: 'var(--text-secondary)'}}>{task.dueDate ? new Date(task.dueDate).toLocaleDateString(undefined, { timeZone: 'UTC' }) : "S/F"}</td>
                     <td>
                       <div style={{display: 'flex', gap: '0.5rem', justifyContent: 'flex-end'}}>
                         {task.status === "pending" && (
