@@ -1,17 +1,19 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { 
-  Search, 
-  Plus, 
-  MoreHorizontal, 
-  Trash2, 
-  CheckCircle2, 
-  Clock, 
-  AlertCircle, 
+import {
+  Search,
+  Plus,
+  MoreHorizontal,
+  Trash2,
+  Pencil,
+  CheckCircle2,
+  Clock,
+  AlertCircle,
   Layout,
   X,
-  Loader2
+  Loader2,
+  Pen
 } from "lucide-react";
 import styles from "./TasksModule.module.css";
 import { tareasService } from "@/services/tareasService";
@@ -22,11 +24,13 @@ export default function TasksModule() {
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  
+  const [editingTask, setEditingTask] = useState(null);
+
   // Estado del formulario
-  const [formData, setFormData] = useState({
+  const initialFormData = {
     title: "",
     description: "",
     project: { name: "General" },
@@ -35,7 +39,15 @@ export default function TasksModule() {
     status: "pending",
     dueDate: "",
     tags: ""
-  });
+  };
+
+  const [formData, setFormData] = useState(initialFormData);
+
+  const handleCreateClick = () => {
+    setFormData(initialFormData);
+    setEditingTask(null);
+    setIsModalOpen(true);
+  };
 
   useEffect(() => {
     fetchTasks();
@@ -55,7 +67,7 @@ export default function TasksModule() {
     }
   };
 
-  const filteredTasks = tasks.filter(task => 
+  const filteredTasks = tasks.filter(task =>
     task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     task.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     task.project?.name?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -68,20 +80,11 @@ export default function TasksModule() {
         ...formData,
         tags: formData.tags ? formData.tags.split(",").map(t => t.trim()) : []
       };
-      
+
       await tareasService.createTarea(taskToSave);
       await fetchTasks();
       setIsModalOpen(false);
-      setFormData({
-        title: "",
-        description: "",
-        project: { name: "General" },
-        assignedTo: { name: "" },
-        priority: "medium",
-        status: "pending",
-        dueDate: "",
-        tags: ""
-      });
+      setFormData(initialFormData);
     } catch (err) {
       alert("Error al crear la tarea");
     }
@@ -101,6 +104,94 @@ export default function TasksModule() {
       setTaskToDelete(null);
     } catch (err) {
       alert("Error al eliminar la tarea");
+    }
+  };
+
+  const handleEditClick = (task) => {
+    setEditingTask(task);
+
+    let formattedDate = "";
+
+    if (task.dueDate) {
+      const date = new Date(task.dueDate);
+      const year = date.getUTCFullYear();
+      const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+      const day = String(date.getUTCDate()).padStart(2, "0");
+      formattedDate = `${year}-${month}-${day}`;
+    }
+
+    setFormData({
+      title: task.title || "",
+      description: task.description || "",
+      project: {
+        name: task.project?.name || "General"
+      },
+      assignedTo: {
+        name: task.assignedTo?.name || ""
+      },
+      priority: task.priority || "medium",
+      status: task.status || "pending",
+      dueDate: formattedDate,
+      tags: Array.isArray(task.tags)
+        ? task.tags.join(", ")
+        : ""
+    });
+
+    setIsEditModalOpen(true);
+  };
+
+  const validateAlphaNumeric = (value) => {
+    // Permite letras (incluyendo acentos y ñ/Ñ), números, espacios y comas
+    // No permite caracteres especiales como @, #, $, %, etc.
+    const regex = /^[A-Za-zÁÉÍÓÚáéíóúÑñ0-9\s,]*$/;
+    return regex.test(value);
+  };
+
+  const handleInputValidation = (field, value) => {
+    if (validateAlphaNumeric(value)) {
+      if (field === "project") {
+        setFormData({
+          ...formData,
+          project: { name: value }
+        });
+      } else if (field === "assignedTo") {
+        setFormData({
+          ...formData,
+          assignedTo: { name: value }
+        });
+      } else {
+        setFormData({
+          ...formData,
+          [field]: value
+        });
+      }
+    }
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+
+    if (!editingTask) return;
+
+    try {
+      const taskToUpdate = {
+        ...formData,
+        tags: formData.tags
+          ? formData.tags.split(",").map(tag => tag.trim())
+          : []
+      };
+
+      await tareasService.updateTarea(editingTask._id, taskToUpdate);
+
+      await fetchTasks();
+
+      setIsEditModalOpen(false);
+      setEditingTask(null);
+
+      setFormData(initialFormData);
+    } catch (err) {
+      console.error(err);
+      alert("Error al actualizar la tarea");
     }
   };
 
@@ -144,6 +235,31 @@ export default function TasksModule() {
     pending: tasks.filter(t => t.status === "pending").length,
   };
 
+  const handleDateValidation = (value) => {
+    if (!value) {
+      setFormData({
+        ...formData,
+        dueDate: ""
+      });
+      return;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const selectedDate = new Date(value);
+    selectedDate.setHours(0, 0, 0, 0);
+
+    if (selectedDate >= today) {
+      setFormData({
+        ...formData,
+        dueDate: value
+      });
+    } else {
+      alert("La fecha límite no puede ser anterior a la fecha actual.");
+    }
+  };
+
   return (
     <div className={styles.moduleContainer}>
       {/* CABECERA */}
@@ -155,15 +271,15 @@ export default function TasksModule() {
         <div className={styles.actionsSection}>
           <div className={styles.searchWrapper}>
             <Search size={18} className={styles.searchIcon} />
-            <input 
-              type="text" 
-              placeholder="Buscar tareas..." 
-              className={styles.searchInput} 
+            <input
+              type="text"
+              placeholder="Buscar tareas..."
+              className={styles.searchInput}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <button className={styles.btnPrimary} onClick={() => setIsModalOpen(true)}>
+          <button className={styles.btnPrimary} onClick={handleCreateClick}>
             <Plus size={18} />
             Nueva tarea
           </button>
@@ -173,7 +289,7 @@ export default function TasksModule() {
       {/* TARJETAS DE RESUMEN */}
       <section className={styles.summaryGrid}>
         <div className={styles.summaryCard}>
-          <div className={`${styles.iconCircle}`} style={{background: 'var(--color-blue-soft)', color: 'var(--color-blue)'}}>
+          <div className={`${styles.iconCircle}`} style={{ background: 'var(--color-blue-soft)', color: 'var(--color-blue)' }}>
             <Layout size={24} />
           </div>
           <div className={styles.cardInfo}>
@@ -182,7 +298,7 @@ export default function TasksModule() {
           </div>
         </div>
         <div className={styles.summaryCard}>
-          <div className={`${styles.iconCircle}`} style={{background: 'var(--color-green-soft)', color: 'var(--color-green)'}}>
+          <div className={`${styles.iconCircle}`} style={{ background: 'var(--color-green-soft)', color: 'var(--color-green)' }}>
             <CheckCircle2 size={24} />
           </div>
           <div className={styles.cardInfo}>
@@ -191,7 +307,7 @@ export default function TasksModule() {
           </div>
         </div>
         <div className={styles.summaryCard}>
-          <div className={`${styles.iconCircle}`} style={{background: 'var(--color-orange-soft)', color: 'var(--color-orange)'}}>
+          <div className={`${styles.iconCircle}`} style={{ background: 'var(--color-orange-soft)', color: 'var(--color-orange)' }}>
             <Clock size={24} />
           </div>
           <div className={styles.cardInfo}>
@@ -200,7 +316,7 @@ export default function TasksModule() {
           </div>
         </div>
         <div className={styles.summaryCard}>
-          <div className={`${styles.iconCircle}`} style={{background: 'var(--color-purple-soft)', color: 'var(--color-purple)'}}>
+          <div className={`${styles.iconCircle}`} style={{ background: 'var(--color-purple-soft)', color: 'var(--color-purple)' }}>
             <AlertCircle size={24} />
           </div>
           <div className={styles.cardInfo}>
@@ -213,21 +329,21 @@ export default function TasksModule() {
       {/* TABLA DE TAREAS */}
       <section className={styles.tableContainer}>
         {loading ? (
-          <div style={{padding: '4rem', textAlign: 'center', color: 'var(--text-secondary)'}}>
-            <Loader2 size={32} className="animate-spin" style={{margin: '0 auto 1rem'}} />
+          <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+            <Loader2 size={32} className="animate-spin" style={{ margin: '0 auto 1rem' }} />
             <p>Cargando tareas...</p>
           </div>
         ) : error ? (
-          <div style={{padding: '4rem', textAlign: 'center', color: 'red'}}>
+          <div style={{ padding: '4rem', textAlign: 'center', color: 'red' }}>
             <p>{error}</p>
-            <button onClick={fetchTasks} style={{marginTop: '1rem', textDecoration: 'underline'}}>Reintentar</button>
+            <button onClick={fetchTasks} style={{ marginTop: '1rem', textDecoration: 'underline' }}>Reintentar</button>
           </div>
         ) : (
           <table className={styles.taskTable}>
             <thead>
               <tr>
-                <th style={{width: '40px'}}>
-                  <div className={styles.customCheckbox} style={{cursor: 'default', opacity: 0.5}}>
+                <th style={{ width: '40px' }}>
+                  <div className={styles.customCheckbox} style={{ cursor: 'default', opacity: 0.5 }}>
                     <CheckCircle2 size={14} />
                   </div>
                 </th>
@@ -237,13 +353,13 @@ export default function TasksModule() {
                 <th>Prioridad</th>
                 <th>Estado</th>
                 <th>Fecha límite</th>
-                <th style={{textAlign: 'right'}}>Acciones</th>
+                <th style={{ textAlign: 'right' }}>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {filteredTasks.length === 0 ? (
                 <tr>
-                  <td colSpan="8" style={{textAlign: 'center', padding: '3rem', color: 'var(--text-muted)'}}>
+                  <td colSpan="8" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
                     {searchTerm ? "No se encontraron tareas que coincidan con la búsqueda." : "No hay tareas registradas. Empieza creando una nueva."}
                   </td>
                 </tr>
@@ -251,7 +367,7 @@ export default function TasksModule() {
                 filteredTasks.map((task) => (
                   <tr key={task._id} className={styles.rowHover}>
                     <td>
-                      <div 
+                      <div
                         className={`${styles.customCheckbox} ${task.status === "completed" ? styles.checkboxChecked : ""}`}
                         onClick={() => toggleStatus(task)}
                         title={task.status === "completed" ? "Marcar como pendiente" : "Marcar como completada"}
@@ -261,7 +377,7 @@ export default function TasksModule() {
                     </td>
                     <td>
                       <div className={styles.taskCell}>
-                        <span className={styles.taskTitle} style={{textDecoration: task.status === "completed" ? "line-through" : "none", color: task.status === "completed" ? "var(--text-muted)" : "inherit"}}>{task.title}</span>
+                        <span className={styles.taskTitle} style={{ textDecoration: task.status === "completed" ? "line-through" : "none", color: task.status === "completed" ? "var(--text-muted)" : "inherit" }}>{task.title}</span>
                         <span className={styles.taskDesc}>{task.description}</span>
                       </div>
                     </td>
@@ -275,33 +391,34 @@ export default function TasksModule() {
                     </td>
                     <td>{getPriorityBadge(task.priority)}</td>
                     <td>{getStatusBadge(task.status)}</td>
-                    <td style={{color: 'var(--text-secondary)'}}>{task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "S/F"}</td>
+                    <td style={{ color: 'var(--text-secondary)' }}>{task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "S/F"}</td>
                     <td>
-                      <div style={{display: 'flex', gap: '0.5rem', justifyContent: 'flex-end'}}>
+                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                         {task.status === "pending" && (
-                          <button 
-                            className={`${styles.statusTextBtn} ${styles.editBtn}`} 
+                          <button
+                            className={`${styles.statusTextBtn} ${styles.editBtn}`}
                             onClick={() => toggleStatus(task)}
                           >
                             Iniciar
                           </button>
                         )}
                         {task.status === "in_progress" && (
-                          <button 
-                            className={`${styles.statusTextBtn} ${styles.completeBtn}`} 
+                          <button
+                            className={`${styles.statusTextBtn} ${styles.completeBtn}`}
                             onClick={() => toggleStatus(task)}
                           >
                             Finalizar
                           </button>
                         )}
                         {task.status === "completed" && (
-                          <button 
-                            className={`${styles.statusTextBtn} ${styles.moreBtn}`} 
+                          <button
+                            className={`${styles.statusTextBtn} ${styles.moreBtn}`}
                             onClick={() => toggleStatus(task)}
                           >
                             Reabrir
                           </button>
                         )}
+                        <button className={`${styles.actionBtn} ${styles.edit2Btn}`} onClick={() => handleEditClick(task)} title="Editar"><Pencil size={16} /></button>
                         <button className={`${styles.actionBtn} ${styles.deleteBtn}`} onClick={() => handleDeleteClick(task)} title="Eliminar"><Trash2 size={16} /></button>
                       </div>
                     </td>
@@ -318,63 +435,63 @@ export default function TasksModule() {
         <div className={styles.modalOverlay} onClick={() => setIsModalOpen(false)}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h2 style={{fontSize: '1.25rem', fontWeight: 600}}>Nueva Tarea</h2>
-              <button onClick={() => setIsModalOpen(false)} style={{color: 'var(--text-muted)'}}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Nueva Tarea</h2>
+              <button onClick={() => setIsModalOpen(false)} style={{ color: 'var(--text-muted)' }}>
                 <X size={24} />
               </button>
             </div>
-            
+
             <form className={styles.modalForm} onSubmit={handleSubmit}>
               <div className={`${styles.formGroup} ${styles.fieldFull}`}>
                 <label>Título de la Tarea</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   required
-                  placeholder="Ej: Revisar informes mensuales..." 
-                  className={styles.formInput} 
+                  placeholder="Ej: Revisar informes mensuales..."
+                  className={styles.formInput}
                   value={formData.title}
-                  onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  onChange={(e) => handleInputValidation("title", e.target.value)}
                 />
               </div>
-              
+
               <div className={`${styles.formGroup} ${styles.fieldFull}`}>
                 <label>Descripción (Opcional)</label>
-                <textarea 
-                  placeholder="Añade detalles relevantes..." 
+                <textarea
+                  placeholder="Añade detalles relevantes..."
                   className={styles.formTextarea}
                   value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  onChange={(e) => handleInputValidation("description", e.target.value)}
                 ></textarea>
               </div>
-              
+
               <div className={styles.formGroup}>
                 <label>Categoría / Proyecto</label>
-                <input 
+                <input
                   type="text"
                   placeholder="General"
                   className={styles.formInput}
                   value={formData.project.name}
-                  onChange={(e) => setFormData({...formData, project: { name: e.target.value }})}
+                  onChange={(e) => handleInputValidation("project", e.target.value)}
                 />
               </div>
 
               <div className={styles.formGroup}>
                 <label>Asignado a</label>
-                <input 
+                <input
                   type="text"
                   placeholder="Nombre del responsable"
                   className={styles.formInput}
                   value={formData.assignedTo.name}
-                  onChange={(e) => setFormData({...formData, assignedTo: { name: e.target.value }})}
+                  onChange={(e) => handleInputValidation("assignedTo", e.target.value)}
                 />
               </div>
 
               <div className={styles.formGroup}>
                 <label>Prioridad</label>
-                <select 
+                <select
                   className={styles.formSelect}
                   value={formData.priority}
-                  onChange={(e) => setFormData({...formData, priority: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
                 >
                   <option value="low">Baja</option>
                   <option value="medium">Media</option>
@@ -384,22 +501,23 @@ export default function TasksModule() {
 
               <div className={styles.formGroup}>
                 <label>Fecha Límite</label>
-                <input 
-                  type="date" 
-                  className={styles.formInput} 
+                <input
+                  type="date"
+                  className={styles.formInput}
                   value={formData.dueDate}
-                  onChange={(e) => setFormData({...formData, dueDate: e.target.value})}
+                  min={new Date().toISOString().split("T")[0]}
+                  onChange={(e) => handleDateValidation(e.target.value)}
                 />
               </div>
 
               <div className={`${styles.formGroup} ${styles.fieldFull}`}>
                 <label>Etiquetas</label>
-                <input 
-                  type="text" 
-                  placeholder="personal, urgente, casa (separadas por comas)" 
-                  className={styles.formInput} 
+                <input
+                  type="text"
+                  placeholder="personal, urgente, casa (separadas por comas)"
+                  className={styles.formInput}
                   value={formData.tags}
-                  onChange={(e) => setFormData({...formData, tags: e.target.value})}
+                  onChange={(e) => handleInputValidation("tags", e.target.value)}
                 />
               </div>
 
@@ -416,8 +534,8 @@ export default function TasksModule() {
       {isDeleteModalOpen && (
         <div className={styles.modalOverlay} onClick={() => setIsDeleteModalOpen(false)}>
           <div className={`${styles.modalContent} ${styles.modalConfirm}`} onClick={(e) => e.stopPropagation()}>
-            <div style={{color: '#ef4444', marginBottom: '1rem'}}>
-              <AlertCircle size={48} style={{margin: '0 auto'}} />
+            <div style={{ color: '#ef4444', marginBottom: '1rem' }}>
+              <AlertCircle size={48} style={{ margin: '0 auto' }} />
             </div>
             <h2>¿Eliminar tarea?</h2>
             <p>
@@ -427,6 +545,129 @@ export default function TasksModule() {
               <button className={styles.btnSecondary} onClick={() => setIsDeleteModalOpen(false)}>Cancelar</button>
               <button className={`${styles.btnPrimary} ${styles.btnDanger}`} onClick={confirmDelete}>Eliminar</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE EDICIÓN DE TAREA */}
+      {isEditModalOpen && (
+        <div className={styles.modalOverlay} onClick={() => setIsEditModalOpen(false)}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Editar Tarea</h2>
+              <button
+                onClick={() => {
+                  setIsEditModalOpen(false);
+                  setEditingTask(null);
+                }}
+                style={{ color: 'var(--text-muted)' }}
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <form className={styles.modalForm} onSubmit={handleUpdate}>
+              <div className={`${styles.formGroup} ${styles.fieldFull}`}>
+                <label>Título de la Tarea</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ej: Revisar informes mensuales..."
+                  className={styles.formInput}
+                  value={formData.title}
+                  onChange={(e) => handleInputValidation("title", e.target.value)}
+                />
+              </div>
+
+              <div className={`${styles.formGroup} ${styles.fieldFull}`}>
+                <label>Descripción (Opcional)</label>
+                <textarea
+                  placeholder="Añade detalles relevantes..."
+                  className={styles.formTextarea}
+                  value={formData.description}
+                  onChange={(e) => handleInputValidation("description", e.target.value)}
+                ></textarea>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Categoría / Proyecto</label>
+                <input
+                  type="text"
+                  placeholder="General"
+                  className={styles.formInput}
+                  value={formData.project.name}
+                  onChange={(e) => handleInputValidation("project", e.target.value)}
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Asignado a</label>
+                <input
+                  type="text"
+                  placeholder="Nombre del responsable"
+                  className={styles.formInput}
+                  value={formData.assignedTo.name}
+                  onChange={(e) => handleInputValidation("assignedTo", e.target.value)}
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Prioridad</label>
+                <select
+                  className={styles.formSelect}
+                  value={formData.priority}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      priority: e.target.value
+                    })
+                  }
+                >
+                  <option value="low">Baja</option>
+                  <option value="medium">Media</option>
+                  <option value="high">Alta</option>
+                </select>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Fecha Límite</label>
+                <input
+                  type="date"
+                  className={styles.formInput}
+                  value={formData.dueDate}
+                  min={new Date().toISOString().split("T")[0]}
+                  onChange={(e) => handleDateValidation(e.target.value)}
+                />
+              </div>
+
+              <div className={`${styles.formGroup} ${styles.fieldFull}`}>
+                <label>Etiquetas</label>
+                <input
+                  type="text"
+                  placeholder="personal, urgente, casa (separadas por comas)"
+                  className={styles.formInput}
+                  value={formData.tags}
+                  onChange={(e) => handleInputValidation("tags", e.target.value)}
+                />
+              </div>
+
+              <div className={`${styles.modalFooter} ${styles.fieldFull}`}>
+                <button
+                  type="button"
+                  className={styles.btnSecondary}
+                  onClick={() => {
+                    setIsEditModalOpen(false);
+                    setEditingTask(null);
+                  }}
+                >
+                  Cerrar
+                </button>
+
+                <button type="submit" className={styles.btnPrimary}>
+                  Guardar Cambios
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
