@@ -14,11 +14,13 @@ const TareaSchema = new mongoose.Schema({
     },
     categoria: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Categoria"
+        ref: "Categoria",
+        required: true
     },
     assignedTo: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User"
+        ref: "User",
+        required: true
     },
     priority: {
         type: String,

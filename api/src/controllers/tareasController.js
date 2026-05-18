@@ -61,8 +61,12 @@ exports.crearTarea = async (req, res) => {
             req.body.dueDate = undefined;
         }
 
-        if (!req.body.categoria) req.body.categoria = undefined;
-        if (!req.body.assignedTo) req.body.assignedTo = undefined;
+        if (!req.body.categoria) {
+            return res.status(400).json({ mensaje: "La categoría es obligatoria" });
+        }
+        if (!req.body.assignedTo) {
+            return res.status(400).json({ mensaje: "El responsable es obligatorio" });
+        }
 
         const tarea = new Tarea({
             ...req.body,
@@ -78,8 +82,16 @@ exports.crearTarea = async (req, res) => {
 // Actualiza una tarea existente. Permite mantener fechas antiguas, pero valida si se asigna una nueva fecha pasada
 exports.actualizarTarea = async (req, res) => {
     try {
+        const userRole = req.headers["x-user-role"];
         const tareaActual = await Tarea.findById(req.params.id);
         if (!tareaActual) return res.status(404).json({ mensaje: "Tarea no encontrada" });
+
+        // Bloquear que un usuario no administrador reabra una tarea finalizada
+        if (req.body.status && req.body.status !== tareaActual.status) {
+            if (tareaActual.status === "completed" && userRole !== "administrador") {
+                return res.status(403).json({ mensaje: "Solo un administrador puede reabrir una tarea finalizada" });
+            }
+        }
 
         if (req.body.dueDate) {
             const today = new Date();
@@ -96,8 +108,12 @@ exports.actualizarTarea = async (req, res) => {
             req.body.dueDate = null;
         }
 
-        if (req.body.categoria === "") req.body.categoria = null;
-        if (req.body.assignedTo === "") req.body.assignedTo = null;
+        if (req.body.categoria === "" || req.body.categoria === null) {
+            return res.status(400).json({ mensaje: "La categoría es obligatoria" });
+        }
+        if (req.body.assignedTo === "" || req.body.assignedTo === null) {
+            return res.status(400).json({ mensaje: "El responsable es obligatorio" });
+        }
 
         const tarea = await Tarea.findByIdAndUpdate(
             req.params.id,

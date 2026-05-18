@@ -116,6 +116,14 @@ export default function TasksModule() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.categoria) {
+      setErrorMsg("La categoría es obligatoria");
+      return;
+    }
+    if (!formData.assignedTo) {
+      setErrorMsg("El responsable es obligatorio");
+      return;
+    }
     try {
       const taskToSave = {
         ...formData,
@@ -128,7 +136,10 @@ export default function TasksModule() {
       setFormData(initialFormData);
       setErrorMsg("");
     } catch (err) {
-      setErrorMsg(err.message || "Error al crear la tarea");
+      const errMsg = err.response && err.response.data && err.response.data.mensaje
+        ? err.response.data.mensaje
+        : (err.message || "Error al crear la tarea");
+      setErrorMsg(errMsg);
     }
   };
 
@@ -202,6 +213,15 @@ export default function TasksModule() {
 
     if (!editingTask) return;
 
+    if (!formData.categoria) {
+      setErrorMsg("La categoría es obligatoria");
+      return;
+    }
+    if (!formData.assignedTo) {
+      setErrorMsg("El responsable es obligatorio");
+      return;
+    }
+
     try {
       const taskToUpdate = {
         ...formData
@@ -217,11 +237,18 @@ export default function TasksModule() {
       setFormData(initialFormData);
     } catch (err) {
       console.error(err);
-      setErrorMsg(err.message || "Error al actualizar la tarea");
+      const errMsg = err.response && err.response.data && err.response.data.mensaje
+        ? err.response.data.mensaje
+        : (err.message || "Error al actualizar la tarea");
+      setErrorMsg(errMsg);
     }
   };
 
   const toggleStatus = async (task) => {
+    if (task.status === "completed" && user?.rol !== "administrador") {
+      alert("No tienes permiso para reabrir esta tarea");
+      return;
+    }
     try {
       const nextStatus = {
         "pending": "in_progress",
@@ -232,7 +259,10 @@ export default function TasksModule() {
       await tareasService.updateTarea(task._id, { status: newStatus });
       fetchTasks();
     } catch (err) {
-      alert("Error al actualizar el estado");
+      const errMsg = err.response && err.response.data && err.response.data.mensaje
+        ? err.response.data.mensaje
+        : "Error al actualizar el estado";
+      alert(errMsg);
     }
   };
 
@@ -459,7 +489,7 @@ export default function TasksModule() {
                             Finalizar
                           </button>
                         )}
-                        {task.status === "completed" && (
+                        {task.status === "completed" && user?.rol === "administrador" && (
                           <button
                             className={`${styles.statusTextBtn} ${styles.moreBtn}`}
                             onClick={() => toggleStatus(task)}
