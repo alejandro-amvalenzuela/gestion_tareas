@@ -1,4 +1,5 @@
 const User = require("../models/userModel");
+const Tarea = require("../models/tareasModel");
 
 const userController = {
     // Obtiene la lista de todos los usuarios (excluyendo contraseñas por seguridad)
@@ -45,6 +46,22 @@ const userController = {
     // Elimina un usuario por su ID
     delete: async (req, res) => {
         try {
+            // Verificar si el usuario tiene tareas creadas
+            const tareasCreadas = await Tarea.findOne({ user: req.params.id });
+            if (tareasCreadas) {
+                return res.status(400).json({ 
+                    mensaje: "No se puede eliminar el usuario porque ha creado tareas en el sistema" 
+                });
+            }
+
+            // Verificar si el usuario tiene tareas asignadas
+            const tareasAsignadas = await Tarea.findOne({ assignedTo: req.params.id });
+            if (tareasAsignadas) {
+                return res.status(400).json({ 
+                    mensaje: "No se puede eliminar el usuario porque tiene tareas asignadas" 
+                });
+            }
+
             await User.findByIdAndDelete(req.params.id);
             res.json({ mensaje: "Usuario eliminado" });
         } catch (error) {

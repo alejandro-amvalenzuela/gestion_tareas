@@ -14,7 +14,8 @@ import {
   X,
   Loader2,
   Pen,
-  LogOut
+  LogOut,
+  Eye
 } from "lucide-react";
 import styles from "./TasksModule.module.css";
 import { tareasService } from "@/services/tareasService";
@@ -24,6 +25,17 @@ import { categoriaService } from "@/services/categoriaService";
 import { useRouter } from "next/navigation";
 import CustomSelect from "@/components/Shared/CustomSelect";
 import CustomDatePicker from "@/components/Shared/CustomDatePicker";
+
+// Función auxiliar para parsear fechas evitando desajustes de zona horaria (UTC vs Local)
+const parseLocalDate = (dateVal) => {
+  if (!dateVal) return null;
+  const d = new Date(dateVal);
+  // Para fechas guardadas en UTC medianoche en la DB, extraemos componentes UTC para evitar desajustes locales
+  if (d.getUTCHours() === 0 && d.getUTCMinutes() === 0 && d.getUTCSeconds() === 0 && d.getUTCMilliseconds() === 0) {
+    return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  }
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+};
 
 export default function TasksModule() {
   const router = useRouter();
@@ -36,6 +48,8 @@ export default function TasksModule() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedTaskDetails, setSelectedTaskDetails] = useState(null);
   const [taskToDelete, setTaskToDelete] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingTask, setEditingTask] = useState(null);
@@ -162,6 +176,11 @@ export default function TasksModule() {
     setIsEditModalOpen(true);
   };
 
+  const handleViewClick = (task) => {
+    setSelectedTaskDetails(task);
+    setIsDetailModalOpen(true);
+  };
+
   const validateAlphaNumeric = (value) => {
     // Permite letras (incluyendo acentos y ñ/Ñ), números, espacios y comas
     // No permite caracteres especiales como @, #, $, %, etc.
@@ -259,8 +278,12 @@ export default function TasksModule() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const selectedDate = new Date(value);
-    selectedDate.setHours(0, 0, 0, 0);
+    const parts = value.split("-");
+    const selectedDate = new Date(
+      parseInt(parts[0], 10),
+      parseInt(parts[1], 10) - 1,
+      parseInt(parts[2], 10)
+    );
 
     if (selectedDate >= today) {
       setFormData({
@@ -378,7 +401,8 @@ export default function TasksModule() {
                 filteredTasks.map((task) => {
                   const today = new Date();
                   today.setHours(0, 0, 0, 0);
-                  const isOverdue = task.dueDate && new Date(task.dueDate) < today && task.status !== "completed";
+                  const localDueDate = parseLocalDate(task.dueDate);
+                  const isOverdue = localDueDate && localDueDate < today && task.status !== "completed";
 
                   return (
                     <tr key={task._id} className={`${styles.rowHover} ${isOverdue ? styles.rowOverdue : ''}`}>
@@ -412,7 +436,7 @@ export default function TasksModule() {
                           color: isOverdue ? '#ef4444' : 'var(--text-secondary)',
                           fontWeight: isOverdue ? 600 : 'normal'
                         }}>
-                          {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "S/F"}
+                          {task.dueDate ? parseLocalDate(task.dueDate).toLocaleDateString() : "S/F"}
                         </span>
                         {isOverdue && <AlertCircle size={14} color="#ef4444" title="Plazo excedido" />}
                       </div>
@@ -443,6 +467,7 @@ export default function TasksModule() {
                             Reabrir
                           </button>
                         )}
+                        <button className={`${styles.actionBtn} ${styles.viewBtn}`} onClick={() => handleViewClick(task)} title="Ver Detalle"><Eye size={16} /></button>
                         {user?.rol === "administrador" && (
                           <>
                             <button className={`${styles.actionBtn} ${styles.edit2Btn}`} onClick={() => handleEditClick(task)} title="Editar"><Pencil size={16} /></button>
@@ -685,6 +710,146 @@ export default function TasksModule() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE DETALLE DE TAREA */}
+      {isDetailModalOpen && selectedTaskDetails && (
+        <div className={styles.modalOverlay} onClick={() => { setIsDetailModalOpen(false); setSelectedTaskDetails(null); }}>
+          <div className={`${styles.modalContent} ${styles.modalDetail}`} onClick={(e) => e.stopPropagation()}>
+            {/* Cabecera del modal */}
+            <div className={styles.modalHeader} style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ 
+                  width: '36px', 
+                  height: '36px', 
+                  borderRadius: '8px', 
+                  background: 'var(--color-blue-soft)', 
+                  color: 'var(--color-blue)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <Eye size={18} />
+                </div>
+                <div>
+                  <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Detalles de la Tarea</h2>
+                </div>
+              </div>
+              <button onClick={() => { setIsDetailModalOpen(false); setSelectedTaskDetails(null); }} style={{ color: 'var(--text-muted)' }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Contenido del Detalle */}
+            <div className={styles.detailContainer}>
+              {/* Título de la tarea */}
+              <div className={styles.detailCardPrimary}>
+                <span className={styles.detailLabel}>Título de la Tarea</span>
+                <h3 className={styles.detailTitleText}>{selectedTaskDetails.title}</h3>
+              </div>
+
+              {/* Descripción de la tarea */}
+              <div className={styles.detailCardSec}>
+                <span className={styles.detailLabel}>Descripción</span>
+                <div className={styles.detailDescBox}>
+                  {selectedTaskDetails.description ? (
+                    <p className={styles.detailDescriptionText}>{selectedTaskDetails.description}</p>
+                  ) : (
+                    <p className={styles.detailDescriptionText} style={{ fontStyle: 'italic', color: 'var(--text-muted)' }}>
+                      Sin descripción detallada disponible.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Grid de Metadatos Compacto y Sin Iconos */}
+              <div className={styles.detailMetaGrid}>
+                {/* Categoría */}
+                <div className={styles.metaItem}>
+                  <div className={styles.metaTextWrapper}>
+                    <span className={styles.metaLabel}>Categoría</span>
+                    <span className={styles.metaValue} style={{ color: selectedTaskDetails.categoria?.color || 'inherit', fontWeight: 600 }}>
+                      {selectedTaskDetails.categoria?.nombre || "Sin Categoría"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Responsable */}
+                <div className={styles.metaItem}>
+                  <div className={styles.metaTextWrapper}>
+                    <span className={styles.metaLabel}>Responsable</span>
+                    <span className={styles.metaValue}>
+                      {selectedTaskDetails.assignedTo ? `${selectedTaskDetails.assignedTo.nombre} ${selectedTaskDetails.assignedTo.apellido}` : "Sin asignar"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Prioridad */}
+                <div className={styles.metaItem}>
+                  <div className={styles.metaTextWrapper}>
+                    <span className={styles.metaLabel}>Prioridad</span>
+                    <div style={{ marginTop: '0.15rem' }}>
+                      {getPriorityBadge(selectedTaskDetails.priority)}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Estado */}
+                <div className={styles.metaItem}>
+                  <div className={styles.metaTextWrapper}>
+                    <span className={styles.metaLabel}>Estado</span>
+                    <div style={{ marginTop: '0.15rem' }}>
+                      {getStatusBadge(selectedTaskDetails.status)}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Fecha Límite */}
+                <div className={styles.metaItem}>
+                  {(() => {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const localDueDate = parseLocalDate(selectedTaskDetails.dueDate);
+                    const isOverdue = localDueDate && localDueDate < today && selectedTaskDetails.status !== "completed";
+                    return (
+                      <div className={styles.metaTextWrapper}>
+                        <span className={styles.metaLabel}>Fecha Límite</span>
+                        <span className={styles.metaValue} style={{ 
+                          color: isOverdue ? '#ef4444' : 'var(--text-secondary)',
+                          fontWeight: isOverdue ? 700 : 600 
+                        }}>
+                          {selectedTaskDetails.dueDate ? localDueDate.toLocaleDateString() : "Sin fecha límite"}
+                        </span>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* Asignador */}
+                <div className={styles.metaItem}>
+                  <div className={styles.metaTextWrapper}>
+                    <span className={styles.metaLabel}>Asignador por</span>
+                    <span className={styles.metaValue}>
+                      {selectedTaskDetails.user ? `${selectedTaskDetails.user.nombre} ${selectedTaskDetails.user.apellido}` : "Sistema"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className={styles.modalFooter} style={{ gridTemplateColumns: '1fr', marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)' }}>
+              <button 
+                type="button" 
+                className={styles.btnSecondary} 
+                onClick={() => { setIsDetailModalOpen(false); setSelectedTaskDetails(null); }}
+                style={{ width: '100%', padding: '0.625rem', fontSize: '0.875rem', fontWeight: 600 }}
+              >
+                Cerrar Detalles
+              </button>
+            </div>
           </div>
         </div>
       )}

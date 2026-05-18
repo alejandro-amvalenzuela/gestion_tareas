@@ -8,17 +8,13 @@ const authController = {
 
             const user = await User.findOne({ username });
 
-            if (!user) {
-                return res.status(401).json({ mensaje: "Usuario no encontrado" });
+            // Validación de seguridad genérica para prevenir enumeración de usuarios
+            if (!user || user.password !== password) {
+                return res.status(401).json({ mensaje: "Usuario o contraseña incorrectos" });
             }
 
             if (!user.activo) {
                 return res.status(403).json({ mensaje: "El usuario no tiene permiso para acceder al sistema" });
-            }
-
-            // Comparación simple sin hash como solicitó el usuario
-            if (user.password !== password) {
-                return res.status(401).json({ mensaje: "Contraseña incorrecta" });
             }
 
             // Devolvemos la info del usuario (sin password por seguridad mínima)

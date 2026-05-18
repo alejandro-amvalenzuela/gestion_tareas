@@ -42,7 +42,8 @@ const TareaSchema = new mongoose.Schema({
         required: true
     }
 }, {
-    timestamps: true // Esto crea automáticamente createdAt y updatedAt
+    timestamps: true, // Esto crea automáticamente createdAt y updatedAt
+    versionKey: false
 });
 
 module.exports = mongoose.model("Tarea", TareaSchema);

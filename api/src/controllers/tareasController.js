@@ -1,5 +1,30 @@
 const Tarea = require("../models/tareasModel");
 
+// Función auxiliar para parsear fechas evitando desajustes de zona horaria (UTC vs Local)
+const parseLocalDate = (dateVal) => {
+    if (!dateVal) return null;
+    let d;
+    if (typeof dateVal === "string") {
+        const parts = dateVal.split("-");
+        if (parts.length === 3) {
+            return new Date(
+                parseInt(parts[0], 10),
+                parseInt(parts[1], 10) - 1,
+                parseInt(parts[2], 10)
+            );
+        }
+        d = new Date(dateVal);
+    } else {
+        d = new Date(dateVal);
+    }
+    // Si la fecha representa la medianoche UTC (como los objetos Date guardados en Mongo),
+    // extraemos sus componentes UTC para evitar el desajuste por zona horaria local.
+    if (d.getUTCHours() === 0 && d.getUTCMinutes() === 0 && d.getUTCSeconds() === 0 && d.getUTCMilliseconds() === 0) {
+        return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+    }
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+};
+
 // Obtiene tareas dependiendo del rol: el administrador ve todas, el usuario normal solo las asignadas a él
 exports.obtenerTareas = async (req, res) => {
     const userId = req.headers["x-user-id"];
@@ -28,8 +53,7 @@ exports.crearTarea = async (req, res) => {
         if (req.body.dueDate) {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            const dueDate = new Date(req.body.dueDate);
-            dueDate.setHours(0, 0, 0, 0);
+            const dueDate = parseLocalDate(req.body.dueDate);
             if (dueDate < today) {
                 return res.status(400).json({ mensaje: "La fecha límite no puede ser anterior a hoy" });
             }
@@ -60,12 +84,10 @@ exports.actualizarTarea = async (req, res) => {
         if (req.body.dueDate) {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            const newDueDate = new Date(req.body.dueDate);
-            newDueDate.setHours(0, 0, 0, 0);
+            const newDueDate = parseLocalDate(req.body.dueDate);
             
             // Solo validamos si está cambiando la fecha a una nueva fecha en el pasado
-            const currentDueDate = tareaActual.dueDate ? new Date(tareaActual.dueDate) : null;
-            if (currentDueDate) currentDueDate.setHours(0, 0, 0, 0);
+            const currentDueDate = parseLocalDate(tareaActual.dueDate);
 
             if (newDueDate < today && (!currentDueDate || newDueDate.getTime() !== currentDueDate.getTime())) {
                 return res.status(400).json({ mensaje: "La fecha límite no puede ser anterior a hoy" });

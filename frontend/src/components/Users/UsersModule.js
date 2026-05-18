@@ -31,6 +31,7 @@ export default function UsersModule() {
   const [searchTerm, setSearchTerm] = useState("");
   const [editingUser, setEditingUser] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
+  const [errorModalMsg, setErrorModalMsg] = useState("");
   const currentUser = authService.getCurrentUser();
 
   const initialFormData = {
@@ -117,7 +118,12 @@ export default function UsersModule() {
       setIsDeleteModalOpen(false);
       setUserToDelete(null);
     } catch (err) {
-      alert("Error al eliminar el usuario");
+      const errMsg = err.response && err.response.data && err.response.data.mensaje
+        ? err.response.data.mensaje
+        : "Error al eliminar el usuario";
+      setIsDeleteModalOpen(false);
+      setUserToDelete(null);
+      setErrorModalMsg(errMsg);
     }
   };
 
@@ -348,6 +354,48 @@ export default function UsersModule() {
             <div className={styles.modalFooter}>
               <button className={styles.btnSecondary} onClick={() => setIsDeleteModalOpen(false)}>Cancelar</button>
               <button className={`${styles.btnPrimary} ${styles.btnDanger}`} onClick={confirmDelete}>Eliminar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE ADVERTENCIA DE INTEGRIDAD */}
+      {errorModalMsg && (
+        <div className={styles.modalOverlay} onClick={() => setErrorModalMsg("")}>
+          <div className={`${styles.modalContent} ${styles.modalConfirm}`} onClick={(e) => e.stopPropagation()}>
+            <div style={{
+              width: '56px',
+              height: '56px',
+              borderRadius: '50%',
+              background: '#fef2f2',
+              color: '#ef4444',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 1.25rem auto'
+            }}>
+              <AlertCircle size={28} />
+            </div>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1e293b' }}>Operación No Permitida</h2>
+            <p style={{ marginTop: '0.5rem', color: '#475569', fontSize: '0.9rem', lineHeight: '1.5' }}>
+              {errorModalMsg}
+            </p>
+            <div className={styles.modalFooter} style={{ gridTemplateColumns: '1fr', marginTop: '1.5rem' }}>
+              <button 
+                className={styles.btnSecondary} 
+                onClick={() => setErrorModalMsg("")} 
+                style={{ 
+                  width: '100%', 
+                  background: '#f8fafc', 
+                  color: '#475569', 
+                  border: '1px solid #cbd5e1', 
+                  padding: '0.625rem',
+                  fontWeight: 600,
+                  fontSize: '0.875rem' 
+                }}
+              >
+                Entendido
+              </button>
             </div>
           </div>
         </div>

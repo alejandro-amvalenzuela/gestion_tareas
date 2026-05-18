@@ -1,4 +1,5 @@
 const Categoria = require("../models/categoriaModel");
+const Tarea = require("../models/tareasModel");
 
 const categoriaController = {
     // Obtiene todas las categorías disponibles
@@ -51,6 +52,14 @@ const categoriaController = {
     // Elimina una categoría por su ID
     delete: async (req, res) => {
         try {
+            // Verificar si hay alguna tarea vinculada a esta categoría
+            const tareasVinculadas = await Tarea.findOne({ categoria: req.params.id });
+            if (tareasVinculadas) {
+                return res.status(400).json({ 
+                    mensaje: "No se puede eliminar la categoría porque tiene tareas asociadas" 
+                });
+            }
+
             await Categoria.findByIdAndDelete(req.params.id);
             res.json({ mensaje: "Categoría eliminada" });
         } catch (error) {

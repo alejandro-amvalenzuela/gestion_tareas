@@ -19,7 +19,20 @@ export default function CustomDatePicker({ value, onChange, label, placeholder }
     setIsOpen(!isOpen);
   };
 
-  const selectedDate = value ? new Date(value) : null;
+  const parseLocalDate = (dateStr) => {
+    if (!dateStr) return null;
+    const parts = dateStr.split("-");
+    if (parts.length === 3) {
+      return new Date(
+        parseInt(parts[0], 10),
+        parseInt(parts[1], 10) - 1,
+        parseInt(parts[2], 10)
+      );
+    }
+    return new Date(dateStr);
+  };
+
+  const selectedDate = parseLocalDate(value);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -47,7 +60,10 @@ export default function CustomDatePicker({ value, onChange, label, placeholder }
   const handleDateClick = (day) => {
     const newDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
     if (newDate >= today) {
-      onChange(newDate.toISOString().split('T')[0]);
+      const year = newDate.getFullYear();
+      const month = String(newDate.getMonth() + 1).padStart(2, "0");
+      const dayStr = String(newDate.getDate()).padStart(2, "0");
+      onChange(`${year}-${month}-${dayStr}`);
       setIsOpen(false);
     }
   };
