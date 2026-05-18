@@ -1,6 +1,7 @@
 const User = require("../models/userModel");
 
 const authController = {
+    // Autentica un usuario validando sus credenciales y que su cuenta esté activa (activo=true)
     login: async (req, res) => {
         try {
             const { username, password } = req.body;
@@ -40,6 +41,7 @@ const authController = {
         }
     },
 
+    // Crea un usuario administrador de sistema por defecto en el primer inicio de la app
     initAdmin: async () => {
         try {
             const adminExists = await User.findOne({ username: "admin" });

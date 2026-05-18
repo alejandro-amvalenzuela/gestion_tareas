@@ -4,11 +4,13 @@ const TareaSchema = new mongoose.Schema({
     title: {
         type: String,
         required: true,
-        trim: true
+        trim: true,
+        maxlength: 100
     },
     description: {
         type: String,
-        trim: true
+        trim: true,
+        maxlength: 500
     },
     categoria: {
         type: mongoose.Schema.Types.ObjectId,
@@ -28,7 +30,6 @@ const TareaSchema = new mongoose.Schema({
         enum: ["pending", "in_progress", "completed"],
         default: "pending"
     },
-    tags: [String],
     dueDate: {
         type: Date
     },

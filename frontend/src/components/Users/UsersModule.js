@@ -30,6 +30,8 @@ export default function UsersModule() {
   const [userToDelete, setUserToDelete] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingUser, setEditingUser] = useState(null);
+  const [errorMsg, setErrorMsg] = useState("");
+  const currentUser = authService.getCurrentUser();
 
   const initialFormData = {
     nombre: "",
@@ -78,13 +80,19 @@ export default function UsersModule() {
       setIsModalOpen(false);
       setEditingUser(null);
       setFormData(initialFormData);
+      setErrorMsg("");
     } catch (err) {
-      alert("Error al guardar el usuario");
+      if (err.response && err.response.status === 400) {
+        setErrorMsg(err.response.data.mensaje || "Error de validación");
+      } else {
+        setErrorMsg("Error al guardar el usuario");
+      }
     }
   };
 
   const handleEditClick = (user) => {
     setEditingUser(user);
+    setErrorMsg("");
     setFormData({
       nombre: user.nombre || "",
       apellido: user.apellido || "",
@@ -142,7 +150,7 @@ export default function UsersModule() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <button className={styles.btnPrimary} onClick={() => { setFormData(initialFormData); setEditingUser(null); setIsModalOpen(true); }}>
+          <button className={styles.btnPrimary} onClick={() => { setFormData(initialFormData); setEditingUser(null); setErrorMsg(""); setIsModalOpen(true); }}>
             <Plus size={18} />
             <span>Nuevo Usuario</span>
           </button>
@@ -167,46 +175,59 @@ export default function UsersModule() {
               </tr>
             </thead>
             <tbody>
-              {filteredUsers.map((user) => (
-                <tr key={user._id} className={styles.rowHover}>
-                  <td>
-                    <div className={styles.taskCell}>
-                      <span className={styles.taskTitle}>{user.nombre} {user.apellido}</span>
-                    </div>
-                  </td>
-                  <td>{user.username}</td>
-                  <td>
-                    <span style={{ 
-                      color: user.rol === 'administrador' ? 'var(--color-orange)' : 'var(--color-blue)',
-                      fontWeight: 600,
-                      textTransform: 'capitalize'
-                    }}>
-                      {user.rol}
-                    </span>
-                  </td>
-                  <td>
-                    <span style={{ 
-                      color: user.activo ? 'rgba(36, 184, 32, 1)' : 'var(--text-muted)',
-                      fontWeight: 600
-                    }}>
-                      {user.activo ? "Activo" : "Inactivo"}
-                    </span>
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                      <button 
-                        className={`${styles.actionBtn} ${user.activo ? styles.deleteBtn : styles.edit2Btn}`} 
-                        onClick={() => toggleStatus(user)}
-                        title={user.activo ? "Desactivar" : "Activar"}
-                      >
-                        {user.activo ? <UserX size={16} /> : <UserCheck size={16} />}
-                      </button>
-                      <button className={`${styles.actionBtn} ${styles.edit2Btn}`} onClick={() => handleEditClick(user)} title="Editar"><Pencil size={16} /></button>
-                      <button className={`${styles.actionBtn} ${styles.deleteBtn}`} onClick={() => handleDeleteClick(user)} title="Eliminar"><Trash2 size={16} /></button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {filteredUsers.map((user) => {
+                const isCurrentUser = currentUser && currentUser._id === user._id;
+                return (
+                  <tr key={user._id} className={styles.rowHover}>
+                    <td>
+                      <div className={styles.taskCell}>
+                        <span className={styles.taskTitle}>{user.nombre} {user.apellido}</span>
+                      </div>
+                    </td>
+                    <td>{user.username}</td>
+                    <td>
+                      <span style={{ 
+                        color: user.rol === 'administrador' ? 'var(--color-orange)' : 'var(--color-blue)',
+                        fontWeight: 600,
+                        textTransform: 'capitalize'
+                      }}>
+                        {user.rol}
+                      </span>
+                    </td>
+                    <td>
+                      <span style={{ 
+                        color: user.activo ? 'rgba(36, 184, 32, 1)' : 'var(--text-muted)',
+                        fontWeight: 600
+                      }}>
+                        {user.activo ? "Activo" : "Inactivo"}
+                      </span>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                        <button 
+                          className={`${styles.actionBtn} ${user.activo ? styles.deleteBtn : styles.edit2Btn}`} 
+                          onClick={() => toggleStatus(user)}
+                          title={isCurrentUser ? "No puedes cambiar tu propio estado" : (user.activo ? "Desactivar" : "Activar")}
+                          disabled={isCurrentUser}
+                          style={isCurrentUser ? { opacity: 0.3, cursor: 'not-allowed' } : {}}
+                        >
+                          {user.activo ? <UserX size={16} /> : <UserCheck size={16} />}
+                        </button>
+                        <button className={`${styles.actionBtn} ${styles.edit2Btn}`} onClick={() => handleEditClick(user)} title="Editar"><Pencil size={16} /></button>
+                        <button 
+                          className={`${styles.actionBtn} ${styles.deleteBtn}`} 
+                          onClick={() => handleDeleteClick(user)} 
+                          title={isCurrentUser ? "No puedes eliminarte a ti mismo" : "Eliminar"}
+                          disabled={isCurrentUser}
+                          style={isCurrentUser ? { opacity: 0.3, cursor: 'not-allowed' } : {}}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
@@ -226,16 +247,24 @@ export default function UsersModule() {
             </div>
 
             <form className={styles.modalForm} onSubmit={handleSubmit}>
+              {errorMsg && (
+                <div className={`${styles.errorMessage} ${styles.fieldFull}`}>
+                  <AlertCircle size={16} />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
               <div className={styles.formGroup}>
                 <label>Nombre</label>
                 <input 
                   type="text" 
                   required 
+                  maxLength={50}
                   className={styles.formInput} 
                   value={formData.nombre} 
                   onChange={(e) => setFormData({...formData, nombre: e.target.value})} 
                   placeholder="Ej: Juan"
                 />
+                <span className={styles.characterCount}>{formData.nombre.length}/50</span>
               </div>
 
               <div className={styles.formGroup}>
@@ -243,11 +272,13 @@ export default function UsersModule() {
                 <input 
                   type="text" 
                   required 
+                  maxLength={50}
                   className={styles.formInput} 
                   value={formData.apellido} 
                   onChange={(e) => setFormData({...formData, apellido: e.target.value})} 
                   placeholder="Ej: Pérez"
                 />
+                <span className={styles.characterCount}>{formData.apellido.length}/50</span>
               </div>
 
               <div className={styles.formGroup}>
@@ -255,21 +286,24 @@ export default function UsersModule() {
                 <input 
                   type="text" 
                   required 
+                  maxLength={20}
+                  minLength={4}
                   className={styles.formInput} 
                   value={formData.username} 
-                  onChange={(e) => setFormData({...formData, username: e.target.value})} 
+                  onChange={(e) => setFormData({...formData, username: e.target.value.replace(/\s/g, "")})} 
                   placeholder="Ej: jperez"
                 />
+                <span className={styles.characterCount}>{formData.username.length}/20</span>
               </div>
 
               <div className={styles.formGroup}>
                 <label>Contraseña</label>
                 <input 
-                  type="text" 
+                  type="password" 
                   required 
                   className={styles.formInput} 
                   value={formData.password} 
-                  onChange={(e) => setFormData({...formData, password: e.target.value})} 
+                  onChange={(e) => setFormData({...formData, password: e.target.value.replace(/\s/g, "")})} 
                   placeholder="Contraseña de acceso"
                 />
               </div>

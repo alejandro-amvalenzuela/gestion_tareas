@@ -5,15 +5,13 @@ const CategoriaSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true,
-        unique: true
+        unique: true,
+        maxlength: 50
     },
     descripcion: {
         type: String,
-        trim: true
-    },
-    color: {
-        type: String,
-        default: "#10b981"
+        trim: true,
+        maxlength: 200
     }
 }, {
     timestamps: true

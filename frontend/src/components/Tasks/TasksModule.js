@@ -39,6 +39,7 @@ export default function TasksModule() {
   const [taskToDelete, setTaskToDelete] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingTask, setEditingTask] = useState(null);
+  const [errorMsg, setErrorMsg] = useState("");
 
   // Estado del formulario
   const initialFormData = {
@@ -48,8 +49,7 @@ export default function TasksModule() {
     assignedTo: "",
     priority: "medium",
     status: "pending",
-    dueDate: "",
-    tags: ""
+    dueDate: ""
   };
 
   const [formData, setFormData] = useState(initialFormData);
@@ -57,6 +57,7 @@ export default function TasksModule() {
   const handleCreateClick = () => {
     setFormData(initialFormData);
     setEditingTask(null);
+    setErrorMsg("");
     setIsModalOpen(true);
   };
 
@@ -111,8 +112,9 @@ export default function TasksModule() {
       await fetchTasks();
       setIsModalOpen(false);
       setFormData(initialFormData);
+      setErrorMsg("");
     } catch (err) {
-      alert("Error al crear la tarea");
+      setErrorMsg(err.message || "Error al crear la tarea");
     }
   };
 
@@ -153,12 +155,10 @@ export default function TasksModule() {
       assignedTo: task.assignedTo?._id || "",
       priority: task.priority || "medium",
       status: task.status || "pending",
-      dueDate: formattedDate,
-      tags: Array.isArray(task.tags)
-        ? task.tags.join(", ")
-        : ""
+      dueDate: formattedDate
     });
 
+    setErrorMsg("");
     setIsEditModalOpen(true);
   };
 
@@ -170,23 +170,11 @@ export default function TasksModule() {
   };
 
   const handleInputValidation = (field, value) => {
-    if (validateAlphaNumeric(value)) {
-      if (field === "project") {
-        setFormData({
-          ...formData,
-          project: { name: value }
-        });
-      } else if (field === "assignedTo") {
-        setFormData({
-          ...formData,
-          assignedTo: { name: value }
-        });
-      } else {
-        setFormData({
-          ...formData,
-          [field]: value
-        });
-      }
+    if (value === "" || validateAlphaNumeric(value)) {
+      setFormData({
+        ...formData,
+        [field]: value
+      });
     }
   };
 
@@ -197,10 +185,7 @@ export default function TasksModule() {
 
     try {
       const taskToUpdate = {
-        ...formData,
-        tags: formData.tags
-          ? formData.tags.split(",").map(tag => tag.trim())
-          : []
+        ...formData
       };
 
       await tareasService.updateTarea(editingTask._id, taskToUpdate);
@@ -209,11 +194,11 @@ export default function TasksModule() {
 
       setIsEditModalOpen(false);
       setEditingTask(null);
-
+      setErrorMsg("");
       setFormData(initialFormData);
     } catch (err) {
       console.error(err);
-      alert("Error al actualizar la tarea");
+      setErrorMsg(err.message || "Error al actualizar la tarea");
     }
   };
 
@@ -390,14 +375,21 @@ export default function TasksModule() {
                   </td>
                 </tr>
               ) : (
-                filteredTasks.map((task) => (
-                  <tr key={task._id} className={styles.rowHover}>
-                    <td>
-                      <div className={styles.taskCell}>
-                        <span className={styles.taskTitle} style={{ textDecoration: task.status === "completed" ? "line-through" : "none", color: task.status === "completed" ? "var(--text-muted)" : "inherit" }}>{task.title}</span>
-                        <span className={styles.taskDesc}>{task.description}</span>
-                      </div>
-                    </td>
+                filteredTasks.map((task) => {
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  const isOverdue = task.dueDate && new Date(task.dueDate) < today && task.status !== "completed";
+
+                  return (
+                    <tr key={task._id} className={`${styles.rowHover} ${isOverdue ? styles.rowOverdue : ''}`}>
+                      <td>
+                        <div className={styles.taskCell}>
+                          <span className={styles.taskTitle} style={{ textDecoration: task.status === "completed" ? "line-through" : "none", color: task.status === "completed" ? "var(--text-muted)" : "inherit" }}>
+                            {task.title}
+                          </span>
+                          <span className={styles.taskDesc}>{task.description}</span>
+                        </div>
+                      </td>
                     <td>
                       <span style={{ color: task.categoria?.color || 'inherit', fontWeight: 600, fontSize: '0.85rem' }}>
                         {task.categoria?.nombre || "Sin categoría"}
@@ -414,7 +406,17 @@ export default function TasksModule() {
                     </td>
                     <td>{getPriorityBadge(task.priority)}</td>
                     <td>{getStatusBadge(task.status)}</td>
-                    <td style={{color: 'var(--text-secondary)'}}>{task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "S/F"}</td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <span style={{
+                          color: isOverdue ? '#ef4444' : 'var(--text-secondary)',
+                          fontWeight: isOverdue ? 600 : 'normal'
+                        }}>
+                          {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "S/F"}
+                        </span>
+                        {isOverdue && <AlertCircle size={14} color="#ef4444" title="Plazo excedido" />}
+                      </div>
+                    </td>
                     <td>
                       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                         {task.status === "pending" && (
@@ -450,8 +452,9 @@ export default function TasksModule() {
                       </div>
                     </td>
                   </tr>
-                ))
-              )}
+                );
+              })
+            )}
             </tbody>
           </table>
         )}
@@ -469,26 +472,36 @@ export default function TasksModule() {
             </div>
 
             <form className={styles.modalForm} onSubmit={handleSubmit}>
+              {errorMsg && (
+                <div className={`${styles.errorMessage} ${styles.fieldFull}`}>
+                  <AlertCircle size={16} />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
               <div className={`${styles.formGroup} ${styles.fieldFull}`}>
                 <label>Título de la Tarea</label>
                 <input
                   type="text"
                   required
+                  maxLength={100}
                   placeholder="Ej: Revisar informes mensuales..."
                   className={styles.formInput}
                   value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  onChange={(e) => handleInputValidation("title", e.target.value)}
                 />
+                <span className={styles.characterCount}>{formData.title.length}/100</span>
               </div>
 
               <div className={`${styles.formGroup} ${styles.fieldFull}`}>
                 <label>Descripción (Opcional)</label>
                 <textarea
+                  maxLength={500}
                   placeholder="Añade detalles relevantes..."
                   className={styles.formTextarea}
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 ></textarea>
+                <span className={styles.characterCount}>{formData.description.length}/500</span>
               </div>
 
               <div className={styles.formGroup}>
@@ -529,20 +542,10 @@ export default function TasksModule() {
                   label="Fecha Límite"
                   placeholder="Seleccionar fecha"
                   value={formData.dueDate}
-                  onChange={(val) => setFormData({ ...formData, dueDate: val })}
+                  onChange={handleDateValidation}
                 />
               </div>
 
-              <div className={`${styles.formGroup} ${styles.fieldFull}`}>
-                <label>Etiquetas</label>
-                <input
-                  type="text"
-                  placeholder="personal, urgente, casa (separadas por comas)"
-                  className={styles.formInput}
-                  value={formData.tags}
-                  onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                />
-              </div>
 
               <div className={`${styles.modalFooter} ${styles.fieldFull}`}>
                 <button type="button" className={styles.btnSecondary} onClick={() => setIsModalOpen(false)}>Cerrar</button>
@@ -590,26 +593,36 @@ export default function TasksModule() {
             </div>
 
             <form className={styles.modalForm} onSubmit={handleUpdate}>
+              {errorMsg && (
+                <div className={`${styles.errorMessage} ${styles.fieldFull}`}>
+                  <AlertCircle size={16} />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
               <div className={`${styles.formGroup} ${styles.fieldFull}`}>
                 <label>Título de la Tarea</label>
                 <input
                   type="text"
                   required
+                  maxLength={100}
                   placeholder="Ej: Revisar informes mensuales..."
                   className={styles.formInput}
                   value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  onChange={(e) => handleInputValidation("title", e.target.value)}
                 />
+                <span className={styles.characterCount}>{formData.title.length}/100</span>
               </div>
 
               <div className={`${styles.formGroup} ${styles.fieldFull}`}>
                 <label>Descripción (Opcional)</label>
                 <textarea
+                  maxLength={500}
                   placeholder="Añade detalles relevantes..."
                   className={styles.formTextarea}
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 ></textarea>
+                <span className={styles.characterCount}>{formData.description.length}/500</span>
               </div>
 
               <div className={styles.formGroup}>
@@ -650,20 +663,10 @@ export default function TasksModule() {
                   label="Fecha Límite"
                   placeholder="Seleccionar fecha"
                   value={formData.dueDate}
-                  onChange={(val) => setFormData({ ...formData, dueDate: val })}
+                  onChange={handleDateValidation}
                 />
               </div>
 
-              <div className={`${styles.formGroup} ${styles.fieldFull}`}>
-                <label>Etiquetas</label>
-                <input
-                  type="text"
-                  placeholder="personal, urgente, casa (separadas por comas)"
-                  className={styles.formInput}
-                  value={formData.tags}
-                  onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                />
-              </div>
 
               <div className={`${styles.modalFooter} ${styles.fieldFull}`}>
                 <button

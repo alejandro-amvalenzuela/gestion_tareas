@@ -17,7 +17,8 @@ import { authService } from "@/services/authService";
 import { useRouter } from "next/navigation";
 
 const initialFormData = {
-  nombre: ""
+  nombre: "",
+  descripcion: ""
 };
 
 export default function CategoriesModule() {
@@ -29,6 +30,7 @@ export default function CategoriesModule() {
   const [editingCategory, setEditingCategory] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState(null);
+  const [errorMsg, setErrorMsg] = useState("");
   
   const user = authService.getCurrentUser();
   const router = useRouter();
@@ -64,16 +66,23 @@ export default function CategoriesModule() {
       setIsModalOpen(false);
       setFormData(initialFormData);
       setEditingCategory(null);
+      setErrorMsg("");
       fetchCategories();
     } catch (err) {
-      alert("Error al guardar la categoría");
+      if (err.response && err.response.status === 400) {
+        setErrorMsg(err.response.data.mensaje || "Error de validación");
+      } else {
+        setErrorMsg("Error al guardar la categoría");
+      }
     }
   };
 
   const handleEditClick = (category) => {
     setEditingCategory(category);
+    setErrorMsg("");
     setFormData({
-      nombre: category.nombre
+      nombre: category.nombre || "",
+      descripcion: category.descripcion || ""
     });
     setIsModalOpen(true);
   };
@@ -119,7 +128,7 @@ export default function CategoriesModule() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <button className={styles.btnPrimary} onClick={() => { setFormData(initialFormData); setEditingCategory(null); setIsModalOpen(true); }}>
+          <button className={styles.btnPrimary} onClick={() => { setFormData(initialFormData); setEditingCategory(null); setErrorMsg(""); setIsModalOpen(true); }}>
             <Plus size={18} />
             <span>Nueva Categoría</span>
           </button>
@@ -137,6 +146,7 @@ export default function CategoriesModule() {
             <thead>
               <tr>
                 <th>Nombre</th>
+                <th>Descripción</th>
                 <th style={{ textAlign: 'right' }}>Acciones</th>
               </tr>
             </thead>
@@ -154,6 +164,9 @@ export default function CategoriesModule() {
                       <div className={styles.taskCell}>
                         <span className={styles.taskTitle}>{cat.nombre}</span>
                       </div>
+                    </td>
+                    <td>
+                      <span className={styles.taskDesc}>{cat.descripcion || "-"}</span>
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
@@ -183,15 +196,34 @@ export default function CategoriesModule() {
             </div>
 
             <form className={styles.modalForm} onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {errorMsg && (
+                <div className={styles.errorMessage}>
+                  <AlertCircle size={16} />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
               <div className={styles.formGroup}>
                 <label>Nombre</label>
                 <input
                   type="text"
                   required
+                  maxLength={50}
                   className={styles.formInput}
                   value={formData.nombre}
                   onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
                 />
+                <span className={styles.characterCount}>{formData.nombre.length}/50</span>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Descripción</label>
+                <textarea
+                  maxLength={200}
+                  className={styles.formTextarea}
+                  value={formData.descripcion}
+                  onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
+                ></textarea>
+                <span className={styles.characterCount}>{formData.descripcion.length}/200</span>
               </div>
 
 
