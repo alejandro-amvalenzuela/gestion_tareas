@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Layout, CheckSquare, Users, Settings, Tag } from "lucide-react";
+import { Layout, CheckSquare, Users, Settings, Tag, BarChart3 } from "lucide-react";
 import styles from "./Navigation.module.css";
 import { authService } from "@/services/authService";
 
@@ -47,6 +47,13 @@ export default function Sidebar() {
             >
               <Tag size={20} />
               <span>Categorías</span>
+            </Link>
+            <Link 
+              href="/reports" 
+              className={`${styles.navItem} ${pathname === "/reports" ? styles.active : ""}`}
+            >
+              <BarChart3 size={20} />
+              <span>Reportes</span>
             </Link>
           </>
         )}

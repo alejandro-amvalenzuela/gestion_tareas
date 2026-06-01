@@ -1,0 +1,171 @@
+.reportsContainer {
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Pestañas Elegantes */
+.tabContainer {
+  display: flex;
+  background: #f1f5f9;
+  padding: 0.35rem;
+  border-radius: 12px;
+  gap: 0.25rem;
+  align-self: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.tabButton {
+  background: transparent;
+  border: none;
+  padding: 0.625rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.tabButton.active {
+  background: #ffffff;
+  color: var(--color-green, #24b820);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+/* Card Contenedora de Tablas */
+.tableCard {
+  background: #ffffff;
+  border: 1px solid #eef2f6;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+  overflow: hidden;
+}
+
+.premiumTable {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.premiumTable th {
+  background: #fcfcfd;
+  padding: 1.1rem 1.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted, #94a3b8);
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+  letter-spacing: 0.05em;
+}
+
+.premiumTable td {
+  padding: 1.25rem 1.5rem;
+  font-size: 0.875rem;
+  color: var(--text-primary, #0f172a);
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+  vertical-align: middle;
+}
+
+.premiumTable tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.premiumTable tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+/* Estado barra e indicaciones */
+.percentageWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.percentageText {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.percentageTrack {
+  width: 120px;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.percentageFill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Badges Premium */
+.badgeGroup {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.statusBadge {
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  letter-spacing: 0.025em;
+}
+
+.statusBadge.pending {
+  background: rgba(245, 158, 11, 0.08);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.15);
+}
+
+.statusBadge.progress {
+  background: rgba(59, 130, 246, 0.08);
+  color: #2563eb;
+  border: 1px solid rgba(59, 130, 246, 0.15);
+}
+
+.statusBadge.completed {
+  background: var(--color-green-soft, rgba(36, 184, 32, 0.1));
+  color: var(--color-green-dark, #1a8c17);
+  border: 1px solid rgba(36, 184, 32, 0.15);
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.userName {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 0.95rem;
+}
+
+.userHandle {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+}
