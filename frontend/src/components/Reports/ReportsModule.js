@@ -397,79 +397,82 @@ const proximasVencer = getReporteProximasVencer().length;
 return (
   <div className={reportStyles.reportsContainer}>
     {/* CABECERA SIMPLIFICADA Y LIMPIA */}
-    <section className={dashboardStyles.header} style={{ marginBottom: "2rem" }}>
-      <div className={dashboardStyles.titleSection}>
-        <h1>Reportes Administrativos</h1>
-        <p>Análisis en tiempo real sobre el estado del proyecto, tareas y responsables</p>
+    <section className={reportStyles.reportsHeader}>
+      <div className={reportStyles.titleArea}>
+        <div className={reportStyles.titleIconContainer}>
+          <BarChart3 size={28} />
+        </div>
+        <div className={reportStyles.titleText}>
+          <h1>Reportes Administrativos</h1>
+          <p>Análisis en tiempo real sobre el estado del proyecto, tareas y responsables</p>
+        </div>
       </div>
 
-      <div className={dashboardStyles.actionsSection}>
-        <button className={dashboardStyles.btnPrimary} onClick={() => exportPDF(activeTab)}>
-          <Download size={18} />
-          <span>Descargar Reporte PDF</span>
-        </button>
-      </div>
+      <button className={reportStyles.pdfButton} onClick={() => exportPDF(activeTab)}>
+        <Download size={18} />
+        <span>Descargar PDF</span>
+      </button>
     </section>
 
-    {/* TARJETAS DE KPIs (USANDO EL MISMO DISEÑO QUE DASHBOARD PRINCIPAL) */}
-    <div className={dashboardStyles.summaryGrid} style={{ marginBottom: "2rem" }}>
-      <div className={dashboardStyles.summaryCard}>
-        <div className={dashboardStyles.iconCircle} style={{ background: "#f1f5f9", color: "#64748b" }}>
-          <FileText size={20} />
+    {/* TARJETAS DE KPIs (SIMÉTRICAS Y BIEN DISTRIBUIDAS - 1 FILA EN DESKTOP) */}
+    <div className={reportStyles.kpiGrid}>
+      <div className={reportStyles.kpiCard}>
+        <div className={reportStyles.kpiIcon} style={{ background: "#f1f5f9", color: "#64748b" }}>
+          <FileText size={18} />
         </div>
-        <div className={dashboardStyles.cardInfo}>
-          <span className={dashboardStyles.cardNumber}>{totalTareas}</span>
-          <span className={dashboardStyles.cardLabel}>Total Tareas</span>
-        </div>
-      </div>
-
-      <div className={dashboardStyles.summaryCard}>
-        <div className={dashboardStyles.iconCircle} style={{ background: "rgba(36, 184, 32, 0.1)", color: "rgba(36, 184, 32, 1)" }}>
-          <CheckCircle size={20} />
-        </div>
-        <div className={dashboardStyles.cardInfo}>
-          <span className={dashboardStyles.cardNumber}>{completadas}</span>
-          <span className={dashboardStyles.cardLabel}>Completadas</span>
+        <div className={reportStyles.kpiInfo}>
+          <span className={reportStyles.kpiNumber}>{totalTareas}</span>
+          <span className={reportStyles.kpiLabel}>Total Tareas</span>
         </div>
       </div>
 
-      <div className={dashboardStyles.summaryCard}>
-        <div className={dashboardStyles.iconCircle} style={{ background: "#eff6ff", color: "#2563eb" }}>
-          <Clock size={20} />
+      <div className={reportStyles.kpiCard}>
+        <div className={reportStyles.kpiIcon} style={{ background: "rgba(36, 184, 32, 0.1)", color: "rgba(36, 184, 32, 1)" }}>
+          <CheckCircle size={18} />
         </div>
-        <div className={dashboardStyles.cardInfo}>
-          <span className={dashboardStyles.cardNumber}>{enProgreso}</span>
-          <span className={dashboardStyles.cardLabel}>En Progreso</span>
-        </div>
-      </div>
-
-      <div className={dashboardStyles.summaryCard}>
-        <div className={dashboardStyles.iconCircle} style={{ background: "#fffbeb", color: "#d97706" }}>
-          <AlertCircle size={20} />
-        </div>
-        <div className={dashboardStyles.cardInfo}>
-          <span className={dashboardStyles.cardNumber}>{pendientes}</span>
-          <span className={dashboardStyles.cardLabel}>Pendientes</span>
+        <div className={reportStyles.kpiInfo}>
+          <span className={reportStyles.kpiNumber}>{completadas}</span>
+          <span className={reportStyles.kpiLabel}>Completadas</span>
         </div>
       </div>
 
-      <div className={dashboardStyles.summaryCard}>
-        <div className={dashboardStyles.iconCircle} style={{ background: "#fffbeb", color: "#d97706" }}>
-          <AlertCircle size={20} />
+      <div className={reportStyles.kpiCard}>
+        <div className={reportStyles.kpiIcon} style={{ background: "#eff6ff", color: "#2563eb" }}>
+          <Clock size={18} />
         </div>
-        <div className={dashboardStyles.cardInfo}>
-          <span className={dashboardStyles.cardNumber}>{tareasVencidas}</span>
-          <span className={dashboardStyles.cardLabel}>Tareas Vencidas</span>
+        <div className={reportStyles.kpiInfo}>
+          <span className={reportStyles.kpiNumber}>{enProgreso}</span>
+          <span className={reportStyles.kpiLabel}>En Progreso</span>
         </div>
       </div>
 
-      <div className={dashboardStyles.summaryCard}>
-        <div className={dashboardStyles.iconCircle} style={{ background: "#fffbeb", color: "#d97706" }}>
-          <AlertCircle size={20} />
+      <div className={reportStyles.kpiCard}>
+        <div className={reportStyles.kpiIcon} style={{ background: "#fffbeb", color: "#d97706" }}>
+          <AlertCircle size={18} />
         </div>
-        <div className={dashboardStyles.cardInfo}>
-          <span className={dashboardStyles.cardNumber}>{proximasVencer}</span>
-          <span className={dashboardStyles.cardLabel}>Tareas Proximas a Vencer</span>
+        <div className={reportStyles.kpiInfo}>
+          <span className={reportStyles.kpiNumber}>{pendientes}</span>
+          <span className={reportStyles.kpiLabel}>Pendientes</span>
+        </div>
+      </div>
+
+      <div className={reportStyles.kpiCard}>
+        <div className={reportStyles.kpiIcon} style={{ background: "#fef2f2", color: "#dc2626" }}>
+          <AlertCircle size={18} />
+        </div>
+        <div className={reportStyles.kpiInfo}>
+          <span className={reportStyles.kpiNumber}>{tareasVencidas}</span>
+          <span className={reportStyles.kpiLabel}>Vencidas</span>
+        </div>
+      </div>
+
+      <div className={reportStyles.kpiCard}>
+        <div className={reportStyles.kpiIcon} style={{ background: "#fffbeb", color: "#d97706" }}>
+          <AlertCircle size={18} />
+        </div>
+        <div className={reportStyles.kpiInfo}>
+          <span className={reportStyles.kpiNumber}>{proximasVencer}</span>
+          <span className={reportStyles.kpiLabel}>Por Vencer</span>
         </div>
       </div>
     </div>
@@ -509,255 +512,257 @@ return (
         className={`${reportStyles.tabButton} ${activeTab === "proximasVencer" ? reportStyles.active : ""}`}
       >
         <Tag size={16} />
-        Por Tareas proximas a Vencer
+        Por Tareas Próximas a Vencer
       </button>
     </div>
 
     {/* CONTENEDOR DE TABLAS ELEGANTES */}
     <section className={reportStyles.tableCard}>
-      {activeTab === "estados" && (
-        <table className={reportStyles.premiumTable}>
-          <thead>
-            <tr>
-              <th>Estado</th>
-              <th style={{ textAlign: "center" }}>Cantidad</th>
-              <th style={{ textAlign: "right" }}>Proporción</th>
-            </tr>
-          </thead>
-          <tbody>
-            {getReporteEstados().map((item) => (
-              <tr key={item.id}>
-                <td>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                    <span
-                      style={{
-                        width: "12px",
-                        height: "12px",
-                        borderRadius: "50%",
-                        background: item.color,
-                        boxShadow: `0 0 10px ${item.color}`
-                      }}
-                    />
-                    <span style={{ fontWeight: 700, color: "#1e293b" }}>{item.nombre}</span>
-                  </div>
-                </td>
-                <td style={{ textAlign: "center", fontWeight: 800, color: "#334155", fontSize: "1.05rem" }}>{item.cantidad}</td>
-                <td style={{ textAlign: "right" }}>
-                  <div className={reportStyles.percentageWrapper}>
-                    <span className={reportStyles.percentageText}>{item.porcentaje}%</span>
-                    <div className={reportStyles.percentageTrack}>
-                      <div
-                        className={reportStyles.percentageFill}
-                        style={{ width: `${item.porcentaje}%`, background: item.color }}
+      <div className={reportStyles.tableWrapper}>
+        {activeTab === "estados" && (
+          <table className={reportStyles.premiumTable}>
+            <thead>
+              <tr>
+                <th>Estado</th>
+                <th style={{ textAlign: "center" }}>Cantidad</th>
+                <th style={{ textAlign: "right" }}>Proporción</th>
+              </tr>
+            </thead>
+            <tbody>
+              {getReporteEstados().map((item) => (
+                <tr key={item.id}>
+                  <td>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                      <span
+                        style={{
+                          width: "12px",
+                          height: "12px",
+                          borderRadius: "50%",
+                          background: item.color,
+                          boxShadow: `0 0 10px ${item.color}`
+                        }}
                       />
-                    </div>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      {activeTab === "usuarios" && (
-        <table className={reportStyles.premiumTable}>
-          <thead>
-            <tr>
-              <th>Usuario / Responsable</th>
-              <th style={{ textAlign: "center" }}>Asignaciones</th>
-              <th>Desglose de Estados</th>
-            </tr>
-          </thead>
-          <tbody>
-            {getReporteUsuarios().length === 0 ? (
-              <tr>
-                <td colSpan="3" style={{ textAlign: "center", padding: "3rem", color: "#64748b" }}>
-                  No hay usuarios registrados en el sistema.
-                </td>
-              </tr>
-            ) : (
-              getReporteUsuarios().map((item, idx) => (
-                <tr key={idx}>
-                  <td>
-                    <div className={reportStyles.userInfo}>
-                      <span className={reportStyles.userName}>{item.nombre}</span>
-                      <span className={reportStyles.userHandle}>@{item.username}</span>
+                      <span style={{ fontWeight: 700, color: "#1e293b" }}>{item.nombre}</span>
                     </div>
                   </td>
-                  <td style={{ textAlign: "center", fontWeight: 800, color: "#334155", fontSize: "1.05rem" }}>{item.total}</td>
-                  <td>
-                    <div className={reportStyles.badgeGroup}>
-                      <span className={`${reportStyles.statusBadge} ${reportStyles.pending}`}>
-                        <AlertCircle size={12} />
-                        {item.pending} pendientes
-                      </span>
-                      <span className={`${reportStyles.statusBadge} ${reportStyles.progress}`}>
-                        <Clock size={12} />
-                        {item.in_progress} en progreso
-                      </span>
-                      <span className={`${reportStyles.statusBadge} ${reportStyles.completed}`}>
-                        <CheckCircle size={12} />
-                        {item.completed} completadas
-                      </span>
+                  <td style={{ textAlign: "center", fontWeight: 800, color: "#334155", fontSize: "1.05rem" }}>{item.cantidad}</td>
+                  <td style={{ textAlign: "right" }}>
+                    <div className={reportStyles.percentageWrapper}>
+                      <span className={reportStyles.percentageText}>{item.porcentaje}%</span>
+                      <div className={reportStyles.percentageTrack}>
+                        <div
+                          className={reportStyles.percentageFill}
+                          style={{ width: `${item.porcentaje}%`, background: item.color }}
+                        />
+                      </div>
                     </div>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      )}
+              ))}
+            </tbody>
+          </table>
+        )}
 
-      {activeTab === "categorias" && (
-        <table className={reportStyles.premiumTable}>
-          <thead>
-            <tr>
-              <th>Categoría / Proyecto</th>
-              <th>Descripción</th>
-              <th style={{ textAlign: "center" }}>Total Tareas</th>
-              <th>Desglose de Estados</th>
-            </tr>
-          </thead>
-          <tbody>
-            {getReporteCategorias().length === 0 ? (
+        {activeTab === "usuarios" && (
+          <table className={reportStyles.premiumTable}>
+            <thead>
               <tr>
-                <td colSpan="4" style={{ textAlign: "center", padding: "3rem", color: "#64748b" }}>
-                  No hay categorías creadas con tareas asignadas.
-                </td>
+                <th>Usuario / Responsable</th>
+                <th style={{ textAlign: "center" }}>Asignaciones</th>
+                <th>Desglose de Estados</th>
               </tr>
-            ) : (
-              getReporteCategorias().map((item, idx) => (
-                <tr key={idx}>
-                  <td>
-                    <span style={{ fontWeight: 700, color: "#1e293b" }}>{item.nombre}</span>
-                  </td>
-                  <td>
-                    <span style={{ color: "#64748b", fontSize: "0.85rem", maxWidth: "240px", display: "inline-block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {item.descripcion}
-                    </span>
-                  </td>
-                  <td style={{ textAlign: "center", fontWeight: 800, color: "#334155", fontSize: "1.05rem" }}>{item.total}</td>
-                  <td>
-                    <div className={reportStyles.badgeGroup}>
-                      <span className={`${reportStyles.statusBadge} ${reportStyles.pending}`}>
-                        <AlertCircle size={12} />
-                        {item.pending} pendientes
-                      </span>
-                      <span className={`${reportStyles.statusBadge} ${reportStyles.progress}`}>
-                        <Clock size={12} />
-                        {item.in_progress} en progreso
-                      </span>
-                      <span className={`${reportStyles.statusBadge} ${reportStyles.completed}`}>
-                        <CheckCircle size={12} />
-                        {item.completed} completadas
-                      </span>
-                    </div>
+            </thead>
+            <tbody>
+              {getReporteUsuarios().length === 0 ? (
+                <tr>
+                  <td colSpan="3" style={{ textAlign: "center", padding: "3rem", color: "#64748b" }}>
+                    No hay usuarios registrados en el sistema.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      )}
+              ) : (
+                getReporteUsuarios().map((item, idx) => (
+                  <tr key={idx}>
+                    <td>
+                      <div className={reportStyles.userInfo}>
+                        <span className={reportStyles.userName}>{item.nombre}</span>
+                        <span className={reportStyles.userHandle}>@{item.username}</span>
+                      </div>
+                    </td>
+                    <td style={{ textAlign: "center", fontWeight: 800, color: "#334155", fontSize: "1.05rem" }}>{item.total}</td>
+                    <td>
+                      <div className={reportStyles.badgeGroup}>
+                        <span className={`${reportStyles.statusBadge} ${reportStyles.pending}`}>
+                          <AlertCircle size={12} />
+                          {item.pending} pendientes
+                        </span>
+                        <span className={`${reportStyles.statusBadge} ${reportStyles.progress}`}>
+                          <Clock size={12} />
+                          {item.in_progress} en progreso
+                        </span>
+                        <span className={`${reportStyles.statusBadge} ${reportStyles.completed}`}>
+                          <CheckCircle size={12} />
+                          {item.completed} completadas
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        )}
 
-      {activeTab === "tareasVencidas" && (
-        <table className={reportStyles.premiumTable}>
-          <thead>
-            <tr>
-              <th>Tarea</th>
-              <th>Responsable</th>
-              <th>Categoría</th>
-              <th>Fecha Límite</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {getReporteTareasVencidas().length === 0 ? (
+        {activeTab === "categorias" && (
+          <table className={reportStyles.premiumTable}>
+            <thead>
               <tr>
-                <td
-                  colSpan="4"
-                  style={{
-                    textAlign: "center",
-                    padding: "3rem",
-                    color: "#64748b"
-                  }}
-                >
-                  No existen tareas vencidas pendientes.
-                </td>
+                <th>Categoría / Proyecto</th>
+                <th>Descripción</th>
+                <th style={{ textAlign: "center" }}>Total Tareas</th>
+                <th>Desglose de Estados</th>
               </tr>
-            ) : (
-              getReporteTareasVencidas().map((tarea) => (
-                <tr key={tarea._id}>
-                  <td style={{ color: "#1e293b", fontWeight: 700 }}>
-                    {tarea.title}</td>
-                  <td style={{ color: "#1e293b", fontWeight: 700 }}>
-                    {tarea.assignedTo?.nombre
-                      ? `${tarea.assignedTo.nombre} ${tarea.assignedTo.apellido || ""}`
-                      : tarea.assignedTo?.username || "-"}
-                  </td>
-
-                  <td style={{ color: "#1e293b", fontWeight: 700 }}>
-                    {tarea.categoria?.nombre || "-"}</td>
-
-                  <td style={{ color: "#dc2626", fontWeight: 700 }}>
-                    {parseLocalDate(tarea.dueDate)?.toLocaleDateString("es-ES")}
+            </thead>
+            <tbody>
+              {getReporteCategorias().length === 0 ? (
+                <tr>
+                  <td colSpan="4" style={{ textAlign: "center", padding: "3rem", color: "#64748b" }}>
+                    No hay categorías creadas con tareas asignadas.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      )}
+              ) : (
+                getReporteCategorias().map((item, idx) => (
+                  <tr key={idx}>
+                    <td>
+                      <span style={{ fontWeight: 700, color: "#1e293b" }}>{item.nombre}</span>
+                    </td>
+                    <td>
+                      <span style={{ color: "#64748b", fontSize: "0.85rem", maxWidth: "240px", display: "inline-block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {item.descripcion}
+                      </span>
+                    </td>
+                    <td style={{ textAlign: "center", fontWeight: 800, color: "#334155", fontSize: "1.05rem" }}>{item.total}</td>
+                    <td>
+                      <div className={reportStyles.badgeGroup}>
+                        <span className={`${reportStyles.statusBadge} ${reportStyles.pending}`}>
+                          <AlertCircle size={12} />
+                          {item.pending} pendientes
+                        </span>
+                        <span className={`${reportStyles.statusBadge} ${reportStyles.progress}`}>
+                          <Clock size={12} />
+                          {item.in_progress} en progreso
+                        </span>
+                        <span className={`${reportStyles.statusBadge} ${reportStyles.completed}`}>
+                          <CheckCircle size={12} />
+                          {item.completed} completadas
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        )}
 
-      {activeTab === "proximasVencer" && (
-        <table className={reportStyles.premiumTable}>
-          <thead>
-            <tr>
-              <th>Tarea</th>
-              <th>Responsable</th>
-              <th>Categoría</th>
-              <th>Fecha Límite</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {getReporteProximasVencer().length === 0 ? (
+        {activeTab === "tareasVencidas" && (
+          <table className={reportStyles.premiumTable}>
+            <thead>
               <tr>
-                <td
-                  colSpan="4"
-                  style={{
-                    textAlign: "center",
-                    padding: "3rem",
-                    color: "#64748b"
-                  }}
-                >
-                  No existen tareas próximas a vencer.
-                </td>
+                <th>Tarea</th>
+                <th>Responsable</th>
+                <th>Categoría</th>
+                <th>Fecha Límite</th>
               </tr>
-            ) : (
-              getReporteProximasVencer().map((tarea) => (
-                <tr key={tarea._id}>
-                  <td style={{ color: "#1e293b", fontWeight: 700 }}>
-                    {tarea.title}</td>
+            </thead>
 
-                  <td style={{ color: "#1e293b", fontWeight: 700 }}>
-                    {tarea.assignedTo?.nombre
-                      ? `${tarea.assignedTo.nombre} ${tarea.assignedTo.apellido || ""}`
-                      : tarea.assignedTo?.username || "-"}
-                  </td>
-
-                  <td style={{ color: "#1e293b", fontWeight: 700 }}>
-                    {tarea.categoria?.nombre || "-"}</td>
-
-                  <td style={{ color: "#f59e0b", fontWeight: 700 }}>
-                    {parseLocalDate(tarea.dueDate)?.toLocaleDateString("es-ES")}
+            <tbody>
+              {getReporteTareasVencidas().length === 0 ? (
+                <tr>
+                  <td
+                    colSpan="4"
+                    style={{
+                      textAlign: "center",
+                      padding: "3rem",
+                      color: "#64748b"
+                    }}
+                  >
+                    No existen tareas vencidas pendientes.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      )}
+              ) : (
+                getReporteTareasVencidas().map((tarea) => (
+                  <tr key={tarea._id}>
+                    <td style={{ color: "#1e293b", fontWeight: 700 }}>
+                      {tarea.title}</td>
+                    <td style={{ color: "#1e293b", fontWeight: 700 }}>
+                      {tarea.assignedTo?.nombre
+                        ? `${tarea.assignedTo.nombre} ${tarea.assignedTo.apellido || ""}`
+                        : tarea.assignedTo?.username || "-"}
+                    </td>
+
+                    <td style={{ color: "#1e293b", fontWeight: 700 }}>
+                      {tarea.categoria?.nombre || "-"}</td>
+
+                    <td style={{ color: "#dc2626", fontWeight: 700 }}>
+                      {parseLocalDate(tarea.dueDate)?.toLocaleDateString("es-ES")}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        )}
+
+        {activeTab === "proximasVencer" && (
+          <table className={reportStyles.premiumTable}>
+            <thead>
+              <tr>
+                <th>Tarea</th>
+                <th>Responsable</th>
+                <th>Categoría</th>
+                <th>Fecha Límite</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {getReporteProximasVencer().length === 0 ? (
+                <tr>
+                  <td
+                    colSpan="4"
+                    style={{
+                      textAlign: "center",
+                      padding: "3rem",
+                      color: "#64748b"
+                    }}
+                  >
+                    No existen tareas próximas a vencer.
+                  </td>
+                </tr>
+              ) : (
+                getReporteProximasVencer().map((tarea) => (
+                  <tr key={tarea._id}>
+                    <td style={{ color: "#1e293b", fontWeight: 700 }}>
+                      {tarea.title}</td>
+
+                    <td style={{ color: "#1e293b", fontWeight: 700 }}>
+                      {tarea.assignedTo?.nombre
+                        ? `${tarea.assignedTo.nombre} ${tarea.assignedTo.apellido || ""}`
+                        : tarea.assignedTo?.username || "-"}
+                    </td>
+
+                    <td style={{ color: "#1e293b", fontWeight: 700 }}>
+                      {tarea.categoria?.nombre || "-"}</td>
+
+                    <td style={{ color: "#f59e0b", fontWeight: 700 }}>
+                      {parseLocalDate(tarea.dueDate)?.toLocaleDateString("es-ES")}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        )}
+      </div>
     </section>
   </div>
 );

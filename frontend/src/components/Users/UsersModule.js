@@ -28,6 +28,11 @@ export default function UsersModule() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
+  const [showDeactivateWarning, setShowDeactivateWarning] = useState(false);
+  const [userToDeactivate, setUserToDeactivate] = useState(null);
+  const [pendingTaskCount, setPendingTaskCount] = useState(0);
+  const [pendingTasks, setPendingTasks] = useState([]);
+  const [manualAssignments, setManualAssignments] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
   const [editingUser, setEditingUser] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
@@ -48,6 +53,17 @@ export default function UsersModule() {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  useEffect(() => {
+    if (isModalOpen || isDeleteModalOpen || showDeactivateWarning || errorModalMsg) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isModalOpen, isDeleteModalOpen, showDeactivateWarning, errorModalMsg]);
 
   const fetchUsers = async () => {
     try {
@@ -128,11 +144,56 @@ export default function UsersModule() {
   };
 
   const toggleStatus = async (user) => {
+    if (user.activo) {
+      try {
+        const res = await usersService.getPendingTasks(user._id);
+        const count = res.pendingCount || 0;
+        const tasks = res.tasks || [];
+        setPendingTaskCount(count);
+        setPendingTasks(tasks);
+
+        const activeRecipients = users.filter(u => u.activo && u._id !== user._id && u.rol === "usuario");
+        const initialAssignments = {};
+        if (activeRecipients.length > 0) {
+          tasks.forEach(task => {
+            initialAssignments[task._id] = activeRecipients[0]._id;
+          });
+        }
+        setManualAssignments(initialAssignments);
+
+        setUserToDeactivate(user);
+        setShowDeactivateWarning(true);
+      } catch (err) {
+        setErrorModalMsg("Error al consultar las tareas pendientes del usuario.");
+      }
+    } else {
+      try {
+        await usersService.toggleStatus(user._id);
+        fetchUsers();
+      } catch (err) {
+        setErrorModalMsg("Error al activar el usuario.");
+      }
+    }
+  };
+
+  const confirmDeactivate = async () => {
+    if (!userToDeactivate) return;
     try {
-      await usersService.toggleStatus(user._id);
+      await usersService.toggleStatus(userToDeactivate._id, manualAssignments);
+      setShowDeactivateWarning(false);
+      setUserToDeactivate(null);
+      setPendingTaskCount(0);
+      setPendingTasks([]);
+      setManualAssignments({});
       fetchUsers();
     } catch (err) {
-      alert("Error al cambiar el estado");
+      const errMsg = err.response?.data?.mensaje || "Error al desactivar el usuario";
+      setShowDeactivateWarning(false);
+      setUserToDeactivate(null);
+      setPendingTaskCount(0);
+      setPendingTasks([]);
+      setManualAssignments({});
+      setErrorModalMsg(errMsg);
     }
   };
 
@@ -358,6 +419,140 @@ export default function UsersModule() {
           </div>
         </div>
       )}
+
+      {/* MODAL DE ADVERTENCIA: DESACTIVACIÓN Y REDISTRIBUCIÓN DE TAREAS */}
+      {showDeactivateWarning && (() => {
+        const activeRecipients = users.filter(u => u.activo && u._id !== userToDeactivate?._id && u.rol === "usuario");
+        const selectOptions = activeRecipients.map(u => ({
+          value: u._id,
+          label: `${u.nombre} ${u.apellido} (${u.username})`
+        }));
+        return (
+          <div className={styles.modalOverlay} onClick={() => { setShowDeactivateWarning(false); setUserToDeactivate(null); }}>
+            <div className={`${styles.modalContent} ${styles.modalConfirm}`} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '540px', padding: '1.25rem' }}>
+              <div style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '50%',
+                background: '#fff7ed',
+                color: '#f59e0b',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 0.5rem auto'
+              }}>
+                <AlertCircle size={24} />
+              </div>
+              <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.25rem' }}>
+                ¿Desactivar usuario?
+              </h2>
+              <p style={{ marginTop: '0.25rem', color: '#475569', fontSize: '0.85rem', lineHeight: '1.4' }}>
+                Estás a punto de desactivar al usuario <strong>"{userToDeactivate?.nombre} {userToDeactivate?.apellido}"</strong>.
+              </p>
+              {pendingTaskCount > 0 ? (
+                <>
+                  <p style={{ marginTop: '0.25rem', color: '#475569', fontSize: '0.85rem', lineHeight: '1.4' }}>
+                    Este usuario tiene{' '}
+                    <strong style={{ color: '#f59e0b' }}>{pendingTaskCount} {pendingTaskCount === 1 ? 'tarea activa' : 'tareas activas o en progreso'}</strong>.
+                  </p>
+                  {activeRecipients.length === 0 ? (
+                    <div style={{
+                      marginTop: '0.75rem',
+                      background: '#fef2f2',
+                      border: '1px solid #fee2e2',
+                      borderRadius: '6px',
+                      padding: '0.6rem',
+                      color: '#ef4444',
+                      fontSize: '0.8rem',
+                      textAlign: 'left'
+                    }}>
+                      <strong>No hay otros usuarios activos en el sistema.</strong> Para poder desactivar a este usuario, primero debes activar a otro miembro del equipo o crear uno nuevo para recibir estas tareas.
+                    </div>
+                  ) : (
+                    <>
+                      <p style={{ marginTop: '0.4rem', color: '#475569', fontSize: '0.85rem', lineHeight: '1.4', marginBottom: '0.5rem' }}>
+                        Reasigna sus tareas pendientes a otros miembros del equipo:
+                      </p>
+                      <div style={{ 
+                        maxHeight: '180px', 
+                        overflowY: 'auto', 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        gap: '0.5rem', 
+                        paddingRight: '0.25rem',
+                        marginBottom: '0.5rem',
+                        textAlign: 'left'
+                      }}>
+                        {pendingTasks.map(task => (
+                          <div key={task._id} style={{
+                            background: '#f8fafc',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '8px',
+                            padding: '0.4rem 0.6rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: '0.75rem'
+                          }}>
+                            <span style={{ 
+                              fontSize: '0.85rem', 
+                              fontWeight: 600, 
+                              color: '#1e293b',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              flex: 1,
+                              textAlign: 'left'
+                            }}>
+                              {task.title}
+                            </span>
+                            <div style={{ width: '220px', flexShrink: 0 }}>
+                              <CustomSelect
+                                options={selectOptions}
+                                value={manualAssignments[task._id] || ""}
+                                onChange={(val) => setManualAssignments({
+                                  ...manualAssignments,
+                                  [task._id]: val
+                                })}
+                                placeholder="Selecciona un responsable"
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </>
+              ) : (
+                <p style={{ marginTop: '0.25rem', color: '#475569', fontSize: '0.85rem', lineHeight: '1.4' }}>
+                  Este usuario no tiene tareas activas asignadas en este momento. La desactivación se realizará directamente.
+                </p>
+              )}
+              <div className={styles.modalFooter} style={{ marginTop: '0.75rem' }}>
+                <button
+                  className={styles.btnSecondary}
+                  onClick={() => { setShowDeactivateWarning(false); setUserToDeactivate(null); }}
+                >
+                  Cancelar
+                </button>
+                <button
+                  className={`${styles.btnPrimary} ${styles.btnDanger}`}
+                  style={{ 
+                    background: '#f59e0b', 
+                    borderColor: '#d97706',
+                    opacity: (pendingTaskCount > 0 && activeRecipients.length === 0) ? 0.5 : 1,
+                    cursor: (pendingTaskCount > 0 && activeRecipients.length === 0) ? 'not-allowed' : 'pointer'
+                  }}
+                  onClick={confirmDeactivate}
+                  disabled={pendingTaskCount > 0 && activeRecipients.length === 0}
+                >
+                  {pendingTaskCount > 0 ? "Confirmar y reasignar" : "Sí, desactivar"}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* MODAL DE ADVERTENCIA DE INTEGRIDAD */}
       {errorModalMsg && (

@@ -17,7 +17,10 @@ export const usersService = {
     method: "DELETE",
   }),
 
-  toggleStatus: (id) => fetchApi(`/usuarios/${id}/toggle`, {
+  getPendingTasks: (id) => fetchApi(`/usuarios/${id}/pending-tasks`),
+
+  toggleStatus: (id, reassignments) => fetchApi(`/usuarios/${id}/toggle`, {
     method: "PATCH",
+    body: reassignments ? JSON.stringify({ reassignments }) : undefined,
   }),
 };

@@ -30,6 +30,7 @@ export default function CategoriesModule() {
   const [editingCategory, setEditingCategory] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState(null);
+  const [showReassignWarning, setShowReassignWarning] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [errorModalMsg, setErrorModalMsg] = useState("");
   
@@ -95,9 +96,18 @@ export default function CategoriesModule() {
 
   const confirmDelete = async () => {
     if (!categoryToDelete) return;
+
+    // Si tiene tareas asignadas y no hemos mostrado la advertencia de reasignación aún
+    if (categoryToDelete.tareasCount > 0 && !showReassignWarning) {
+      setIsDeleteModalOpen(false);
+      setShowReassignWarning(true);
+      return;
+    }
+
     try {
       await categoriasService.delete(categoryToDelete._id);
       setIsDeleteModalOpen(false);
+      setShowReassignWarning(false);
       setCategoryToDelete(null);
       fetchCategories();
     } catch (err) {
@@ -105,6 +115,7 @@ export default function CategoriesModule() {
         ? err.response.data.mensaje
         : "Error al eliminar la categoría";
       setIsDeleteModalOpen(false);
+      setShowReassignWarning(false);
       setCategoryToDelete(null);
       setErrorModalMsg(errMsg);
     }
@@ -153,13 +164,14 @@ export default function CategoriesModule() {
               <tr>
                 <th>Nombre</th>
                 <th>Descripción</th>
+                <th style={{ textAlign: 'center' }}>Tareas</th>
                 <th style={{ textAlign: 'right' }}>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {filteredCategories.length === 0 ? (
                 <tr>
-                    <td colSpan="2" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                  <td colSpan="4" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
                     No se encontraron categorías.
                   </td>
                 </tr>
@@ -175,6 +187,18 @@ export default function CategoriesModule() {
                       <div className={styles.taskCell}>
                         <span className={styles.taskDesc}>{cat.descripcion || "-"}</span>
                       </div>
+                    </td>
+                    <td style={{ textAlign: 'center' }}>
+                      <span className={styles.badge} style={{ 
+                        background: 'rgba(36, 184, 32, 0.1)', 
+                        color: 'rgba(36, 184, 32, 1)', 
+                        border: '1px solid rgba(36, 184, 32, 0.15)',
+                        fontWeight: '700',
+                        padding: '0.25rem 0.6rem',
+                        fontSize: '0.8rem'
+                      }}>
+                        {cat.tareasCount || 0}
+                      </span>
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
@@ -249,7 +273,7 @@ export default function CategoriesModule() {
       )}
       {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN */}
       {isDeleteModalOpen && (
-        <div className={styles.modalOverlay} onClick={() => setIsDeleteModalOpen(false)}>
+        <div className={styles.modalOverlay} onClick={() => { setIsDeleteModalOpen(false); }}>
           <div className={`${styles.modalContent} ${styles.modalConfirm}`} onClick={(e) => e.stopPropagation()}>
             <div style={{ color: '#ef4444', marginBottom: '1rem' }}>
               <AlertCircle size={48} style={{ margin: '0 auto' }} />
@@ -261,6 +285,52 @@ export default function CategoriesModule() {
             <div className={styles.modalFooter}>
               <button className={styles.btnSecondary} onClick={() => setIsDeleteModalOpen(false)}>Cancelar</button>
               <button className={`${styles.btnPrimary} ${styles.btnDanger}`} onClick={confirmDelete}>Eliminar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE ADVERTENCIA: REASIGNACIÓN DE TAREAS A "GENERAL" */}
+      {showReassignWarning && (
+        <div className={styles.modalOverlay} onClick={() => { setShowReassignWarning(false); setCategoryToDelete(null); }}>
+          <div className={`${styles.modalContent} ${styles.modalConfirm}`} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '440px' }}>
+            <div style={{
+              width: '60px',
+              height: '60px',
+              borderRadius: '50%',
+              background: '#fff7ed',
+              color: '#f59e0b',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 1.25rem auto'
+            }}>
+              <AlertCircle size={30} />
+            </div>
+            <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: '#1e293b' }}>
+              Esta categoría tiene tareas asignadas
+            </h2>
+            <p style={{ marginTop: '0.75rem', color: '#475569', fontSize: '0.9rem', lineHeight: '1.6' }}>
+              La categoría <strong>"{categoryToDelete?.nombre}"</strong> tiene{' '}
+              <strong style={{ color: '#f59e0b' }}>{categoryToDelete?.tareasCount} {categoryToDelete?.tareasCount === 1 ? 'tarea asignada' : 'tareas asignadas'}</strong>.
+            </p>
+            <p style={{ marginTop: '0.5rem', color: '#475569', fontSize: '0.9rem', lineHeight: '1.6' }}>
+              Si continúas, todas estas tareas serán reasignadas automáticamente a la categoría{' '}
+              <strong style={{ color: 'rgba(36, 184, 32, 1)' }}>"General"</strong>. ¿Deseas continuar?
+            </p>
+            <div className={styles.modalFooter} style={{ marginTop: '1.5rem' }}>
+              <button
+                className={styles.btnSecondary}
+                onClick={() => { setShowReassignWarning(false); setCategoryToDelete(null); }}
+              >
+                Cancelar
+              </button>
+              <button
+                className={`${styles.btnPrimary} ${styles.btnDanger}`}
+                onClick={confirmDelete}
+              >
+                Sí, eliminar y reasignar
+              </button>
             </div>
           </div>
         </div>

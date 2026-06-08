@@ -20,11 +20,11 @@ export default function DashboardWrapper({ children }) {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f8fafc' }}>
+    <div style={{ display: 'flex', height: '100vh', background: '#f8fafc', overflow: 'hidden' }}>
       <Sidebar />
-      <div style={{ flex: 1, marginLeft: '260px' }}>
+      <div style={{ flex: 1, marginLeft: '260px', display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
         <Topbar />
-        <main style={{ padding: '2rem' }}>
+        <main style={{ flex: 1, padding: '2rem', overflowY: 'auto' }}>
           {children}
         </main>
       </div>
