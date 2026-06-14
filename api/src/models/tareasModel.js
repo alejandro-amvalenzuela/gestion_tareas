@@ -42,7 +42,27 @@ const TareaSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         required: true
-    }
+    },
+
+    comentarios: [
+        {
+            texto: {
+                type: String,
+                required: true,
+                trim: true,
+                maxlength: 1000
+            },
+            autor: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+                required: true
+            },
+            fecha: {
+                type: Date,
+                default: Date.now
+            }
+        }
+    ]
 }, {
     timestamps: true, // Esto crea automáticamente createdAt y updatedAt
     versionKey: false

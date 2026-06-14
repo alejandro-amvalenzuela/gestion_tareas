@@ -11,4 +11,8 @@ router.put("/:id", tareasController.actualizarTarea);
 
 router.delete("/:id", tareasController.eliminarTarea);
 
+router.post("/:id/comentarios", tareasController.agregarComentario);
+
+router.get("/:id/comentarios", tareasController.obtenerComentarios);
+
 module.exports = router;

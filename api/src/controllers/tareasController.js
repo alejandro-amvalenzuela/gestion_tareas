@@ -132,3 +132,53 @@ exports.eliminarTarea = async (req, res) => {
     await Tarea.findByIdAndDelete(req.params.id);
     res.json({ mensaje: "Tarea eliminada" });
 };
+
+exports.agregarComentario = async (req, res) => {
+    try {
+        const userId = req.headers["x-user-id"];
+        const { id } = req.params;
+        const { texto } = req.body;
+
+        if (!texto || !texto.trim()) {
+            return res.status(400).json({ mensaje: "El comentario no puede estar vacío" });
+        }
+
+        const tarea = await Tarea.findById(id);
+        if (!tarea) {
+            return res.status(404).json({ mensaje: "Tarea no encontrada" });
+        }
+
+        const nuevoComentario = {
+            texto,
+            autor: userId,
+            fecha: new Date()
+        };
+
+        tarea.comentarios.push(nuevoComentario);
+        await tarea.save();
+
+        res.json({ mensaje: "Comentario agregado correctamente", comentario: nuevoComentario });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ mensaje: "Error al agregar comentario" });
+    }
+};
+
+exports.obtenerComentarios = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const tarea = await Tarea.findById(id)
+            .populate("comentarios.autor", "nombre apellido username");
+
+        if (!tarea) {
+            return res.status(404).json({ mensaje: "Tarea no encontrada" });
+        }
+
+        res.json(tarea.comentarios);
+
+    } catch (error) {
+        res.status(500).json({ mensaje: "Error al obtener comentarios" });
+    }
+};

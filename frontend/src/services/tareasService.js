@@ -16,4 +16,14 @@ export const tareasService = {
   deleteTarea: (id) => fetchApi(`/tareas/${id}`, {
     method: "DELETE",
   }),
+
+  addComentario: (id, texto) =>
+  fetchApi(`/tareas/${id}/comentarios`, {
+    method: "POST",
+    body: JSON.stringify({ texto }),
+  }),
+
+  getComentarios: (id) =>
+    fetchApi(`/tareas/${id}/comentarios`)
+
 };

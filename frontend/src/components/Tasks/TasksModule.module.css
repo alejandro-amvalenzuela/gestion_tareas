@@ -686,3 +686,10 @@
     gap: 0.75rem;
   }
 }
+
+.commentText {
+  margin: 0.25rem 0;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}

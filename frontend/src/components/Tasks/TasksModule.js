@@ -15,7 +15,7 @@ import {
   Loader2,
   Pen,
   LogOut,
-  Eye
+  Eye, MessageCircle
 } from "lucide-react";
 import styles from "./TasksModule.module.css";
 import { tareasService } from "@/services/tareasService";
@@ -54,6 +54,11 @@ export default function TasksModule() {
   const [searchTerm, setSearchTerm] = useState("");
   const [editingTask, setEditingTask] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
+  const [isCommentsModalOpen, setIsCommentsModalOpen] = useState(false);
+  const [activeTask, setActiveTask] = useState(null);
+  const [comentarios, setComentarios] = useState([]);
+  const [nuevoComentario, setNuevoComentario] = useState("");
+  const [commentsLoading, setCommentsLoading] = useState(false);
 
   // Estado del formulario
   const initialFormData = {
@@ -64,6 +69,38 @@ export default function TasksModule() {
     priority: "medium",
     status: "pending",
     dueDate: ""
+  };
+
+  const openCommentsModal = async (task) => {
+    setActiveTask(task);
+    setIsCommentsModalOpen(true);
+    setNuevoComentario("");
+    setCommentsLoading(true);
+
+    try {
+      const data = await tareasService.getComentarios(task._id);
+      setComentarios(data);
+    } catch (err) {
+      console.error("Error cargando comentarios", err);
+      setComentarios([]);
+    } finally {
+      setCommentsLoading(false);
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!nuevoComentario.trim() || !activeTask) return;
+
+    try {
+      await tareasService.addComentario(activeTask._id, nuevoComentario);
+
+      setNuevoComentario("");
+
+      const data = await tareasService.getComentarios(activeTask._id);
+      setComentarios(data);
+    } catch (err) {
+      console.error("Error agregando comentario", err);
+    }
   };
 
   const [formData, setFormData] = useState(initialFormData);
@@ -504,6 +541,24 @@ export default function TasksModule() {
                             <button className={`${styles.actionBtn} ${styles.deleteBtn}`} onClick={() => handleDeleteClick(task)} title="Eliminar"><Trash2 size={16} /></button>
                           </>
                         )}
+                        {task.status === "completed" ? (
+                            <button
+                              className={`${styles.actionBtn} ${styles.commentBtn}`}
+                              title="Comentarios deshabilitados (tarea completada)"
+                              disabled
+                              style={{ opacity: 0.3, cursor: "not-allowed" }}
+                            >
+                              <MessageCircle size={16} />
+                            </button>
+                          ) : (
+                            <button
+                              className={`${styles.actionBtn} ${styles.commentBtn}`}
+                              onClick={() => openCommentsModal(task)}
+                              title="Comentarios"
+                            >
+                              <MessageCircle size={16} />
+                            </button>
+                          )}  
                       </div>
                     </td>
                   </tr>
@@ -880,6 +935,106 @@ export default function TasksModule() {
                 Cerrar Detalles
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {isCommentsModalOpen && activeTask && (
+        <div
+          className={styles.modalOverlay}
+          onClick={() => setIsCommentsModalOpen(false)}
+        >
+          <div
+            className={`${styles.modalContent} ${styles.modalDetail}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+
+            {/* HEADER */}
+            <div className={styles.modalHeader}>
+              <h2 style={{ fontSize: "1.2rem", fontWeight: 700 }}>
+                Comentarios
+              </h2>
+
+              <button
+                onClick={() => setIsCommentsModalOpen(false)}
+                style={{ color: "var(--text-muted)" }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* TASK INFO */}
+            <div style={{ marginBottom: "1rem" }}>
+              <span style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>
+                Nombre de la Tarea
+              </span>
+              <div style={{ fontWeight: 600 }}>
+                {activeTask.title}
+              </div>
+            </div>
+
+            {/* LISTA DE COMENTARIOS */}
+            <div style={{ maxHeight: "300px", overflowY: "auto", marginBottom: "1rem" }}>
+              {commentsLoading ? (
+                <p>Cargando comentarios...</p>
+              ) : comentarios.length === 0 ? (
+                <p style={{ color: "var(--text-muted)" }}>
+                  No hay comentarios aún
+                </p>
+              ) : (
+                comentarios.map((c) => (
+                  <div
+                    key={c._id}
+                    style={{
+                      background: "#f6f7f9",
+                      padding: "0.75rem",
+                      borderRadius: "8px",
+                      marginBottom: "0.5rem"
+                    }}
+                  >
+                    <strong>
+                      {c.autor?.nombre} {c.autor?.apellido}
+                    </strong>
+                    <p className={styles.commentText}>{c.texto}</p>
+                    <small style={{ color: "var(--text-muted)" }}>
+                      {new Date(c.fecha).toLocaleString()}
+                    </small>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* INPUT NUEVO COMENTARIO */}
+            {user?.rol === "usuario" && (
+              <div>
+                <textarea
+                  value={nuevoComentario}
+                  maxLength={500}
+                  onChange={(e) => setNuevoComentario(e.target.value)}
+                  placeholder="Escribe un comentario..."
+                  style={{
+                    width: "100%",
+                    minHeight: "90px",
+                    padding: "0.75rem",
+                    borderRadius: "8px",
+                    border: "1px solid var(--border-color)",
+                    resize: "none"
+                  }}
+                />
+
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: "0.5rem" }}>
+                  <small style={{ color: "var(--text-muted)" }}>
+                    {nuevoComentario.length}/500
+                  </small>
+
+                  <button
+                    onClick={handleAddComment}
+                    className={styles.btnPrimary}
+                  >
+                    Enviar
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
